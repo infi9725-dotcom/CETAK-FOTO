@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FM FOTO - Cetak Pas Foto & R Series</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+
+        /* Ukuran Kertas & Margin Dinamis */
+        :root {
+            --paper-width: 210mm;
+            --paper-height: 297mm;
+            --paper-margin: 10mm;
+        }
+
+        /* Area Kerja Kanvas */
+        .canvas-container {
+            background-color: #f1f5f9;
+            padding: 40px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Styling kertas di layar */
+        .print-paper {
+            width: var(--paper-width);
+            min-height: var(--paper-height);
+            padding: var(--paper-margin);
+            margin: 0 auto;
+            background: #ffffff;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 5px;
+            position: relative;
+            transform-origin: top center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0;
+            transition: padding 0.2s ease-in-out;
+        }
+
+        /* Indikator Margin (Hanya di layar) */
+        .print-paper::after {
+            content: '';
+            position: absolute;
+            top: var(--paper-margin);
+            left: var(--paper-margin);
+            right: var(--paper-margin);
+            bottom: var(--paper-margin);
+            border: 1px dashed #cbd5e1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ATURAN CETAK TOTAL */
+        @media print {
+            @page {
+                margin: 0;
+                size: var(--paper-width) var(--paper-height);
+            }
+            
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                box-shadow: none !important;
+                border: none !important;
+                outline: none !important;
+            }
+
+            .print-paper::after, .no-print {
+                display: none !important;
+            }
+
+            html, body {
+                width: var(--paper-width);
+                height: var(--paper-height);
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important; 
+                background: #ffffff !important;
+            }
+
+            .canvas-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: #ffffff !important;
+                display: block !important;
+                min-height: auto !important;
+                border: none !important;
+            }
+
+            .print-paper {
+                margin: 0 !important;
+                padding: var(--paper-margin) !important;
+                width: var(--paper-width) !important;
+                height: var(--paper-height) !important;
+                max-height: var(--paper-height) !important;
+                background: #ffffff !important;
+                gap: 2mm !important; 
+                display: flex !important;
+                flex-wrap: wrap !important;
+                border: none !important;
+                visibility: visible !important;
+                position: static !important;
+            }
+
+            .photo-item {
+                border: none !important;
+                margin: 0 !important;
+                page-break-inside: avoid !important;
+                display: block !important;
+            }
+            
+            .photo-item img {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+            }
+        }
+
+        /* Saiz Pas Foto */
+        .size-2x3 { width: 21.5mm; height: 27.5mm; }
+        .size-3x4 { width: 28mm; height: 38mm; }
+        .size-4x6 { width: 38mm; height: 56mm; }
+
+        /* Saiz R Series - LENGKAP */
+        .size-2r { width: 6cm; height: 9cm; }
+        .size-3r { width: 8.9cm; height: 12.7cm; }
+        .size-4r { width: 10.2cm; height: 15.2cm; }
+        .size-5r { width: 12.7cm; height: 17.8cm; }
+        .size-6r { width: 15.2cm; height: 20.3cm; }
+        .size-8r { width: 20.3cm; height: 25.4cm; }
+        .size-10r { width: 25.4cm; height: 30.5cm; }
+        .size-11r { width: 27.9cm; height: 35.6cm; }
+        .size-12r { width: 30.5cm; height: 38.1cm; }
+        .size-14r { width: 35.5cm; height: 43.1cm; }
+        .size-16r { width: 40.6cm; height: 50.8cm; }
+        .size-20r { width: 50.8cm; height: 60.9cm; }
+        .size-22r { width: 50.8cm; height: 74.9cm; }
+        .size-24r { width: 60.9cm; height: 91.4cm; }
+        .size-30r { width: 76.2cm; height: 101.6cm; }
+
+        /* Style Item Foto */
+        .photo-item {
+            border: none !important; 
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            page-break-inside: avoid;
+            z-index: 2;
+        }
+
+        .photo-item:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .empty-state {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Section Login -->
+    <div id="loginSection" class="fixed inset-0 z-[100] bg-blue-700 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
+            <div class="flex flex-col items-center">
+                <!-- Logo FAMI COLLECTION Login -->
+                <div class="mb-4">
+                    <img src="https://iili.io/fWoXBgp.png" alt="Logo FAMI COLLECTION" class="h-24 w-auto object-contain drop-shadow-md" onerror="this.src='https://iili.io/fWoXBgp.th.png'">
+                </div>
+                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">FAMI COLLECTION</h1>
+                <!-- Teks URL ditukar menjadi warna biru (text-blue-600) -->
+                <p class="text-blue-600 text-xs font-bold">www.famicollection.my.id</p>
+            </div>
+            
+            <div class="space-y-4 text-left">
+                <input type="text" id="usernameInput" placeholder="Masukkan Nama Pengguna..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all font-medium text-sm">
+                <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-95 uppercase text-xs tracking-widest">
+                    Masuk Aplikasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kandungan Utama -->
+    <div id="appContent" class="hidden">
+        <nav class="bg-blue-700 text-white shadow-md no-print sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-1 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                        <!-- Logo Navbar -->
+                        <img src="https://iili.io/fWoXBgp.png" alt="Logo" class="h-8 w-auto object-contain" onerror="this.src='https://iili.io/fWoXBgp.th.png'">
+                    </div>
+                    <span class="text-xl font-black uppercase tracking-tighter">FM FOTO</span>
+                </div>
+                
+                <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-1.5 rounded-lg transition-all text-xs uppercase">
+                    Keluar
+                </button>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar Panel -->
+            <div class="lg:col-span-1 no-print">
+                <div class="bg-white p-5 rounded-2xl shadow-lg border border-gray-100 space-y-4">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-gray-800 border-b pb-2">Konfigurasi</h2>
+
+                    <div class="space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase">Kertas</label>
+                            <div class="flex bg-gray-50 p-1 rounded-xl gap-1">
+                                <button onclick="setPaper('A4')" id="btn-a4" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white shadow-sm text-blue-700">A4</button>
+                                <button onclick="setPaper('F4')" id="btn-f4" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500">F4</button>
+                                <button onclick="setPaper('A3')" id="btn-a3" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500">A3</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                            <label class="text-[10px] font-black uppercase text-blue-700">Margin Cetak</label>
+                            <select id="marginSelect" onchange="setMargin(this.value)" class="w-full bg-white border border-blue-200 rounded-lg p-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="0mm">Tanpa Margin (0mm)</option>
+                                <option value="5mm">Kecil (5mm)</option>
+                                <option value="10mm" selected>Standard (10mm)</option>
+                                <option value="15mm">Lebar (15mm)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase">Orientasi</label>
+                            <div class="flex bg-gray-50 p-1 rounded-xl gap-1">
+                                <button onclick="setOrientation('portrait')" id="btn-portrait" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-white shadow-sm text-blue-700">Menegak</button>
+                                <button onclick="setOrientation('landscape')" id="btn-landscape" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500">Melintang</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1.5 pt-2 border-t">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">1. Muat Naik Foto</label>
+                        <div class="relative group">
+                            <input type="file" id="photoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="border border-dashed border-gray-300 rounded-xl p-3 text-center bg-gray-50 group-hover:border-blue-400 transition-all">
+                                <span class="text-[10px] font-medium text-gray-400" id="fileNameDisplay">Pilih Fail...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-1">
+                        <button onclick="addPresetRow()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-[10px] uppercase flex items-center justify-center gap-2">
+                            Paket Baris (2x3, 3x4, 4x6) x 2
+                        </button>
+                    </div>
+
+                    <div class="space-y-1.5 border-t pt-2">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">2. Saiz & Jumlah</label>
+                        <select id="sizeSelect" onchange="toggleCustomInputs()" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs font-bold outline-none">
+                            <optgroup label="Pas Foto">
+                                <option value="size-2x3">2x3 cm</option>
+                                <option value="size-3x4" selected>3x4 cm</option>
+                                <option value="size-4x6">4x6 cm</option>
+                            </optgroup>
+                            <optgroup label="R Series">
+                                <option value="size-2r">2R (6x9 cm)</option>
+                                <option value="size-3r">3R (8.9x12.7 cm)</option>
+                                <option value="size-4r">4R (10.2x15.2 cm)</option>
+                                <option value="size-5r">5R (12.7x17.8 cm)</option>
+                                <option value="size-6r">6R (15.2x20.3 cm)</option>
+                                <option value="size-8r">8R (20.3x25.4 cm)</option>
+                                <option value="size-10r">10R (25.4x30.5 cm)</option>
+                                <option value="size-11r">11R (27.9x35.6 cm)</option>
+                                <option value="size-12r">12R (30.5x38.1 cm)</option>
+                                <option value="size-14r">14R (35.5x43.1 cm)</option>
+                                <option value="size-16r">16R (40.6x50.8 cm)</option>
+                                <option value="size-20r">20R (50.8x60.9 cm)</option>
+                                <option value="size-22r">22R (50.8x74.9 cm)</option>
+                                <option value="size-24r">24R (60.9x91.4 cm)</option>
+                                <option value="size-30r">30R (76.2x101.6 cm)</option>
+                            </optgroup>
+                            <option value="custom">Tersuai...</option>
+                        </select>
+                        <div id="customSizeGroup" class="hidden grid grid-cols-2 gap-2 mt-1">
+                            <input type="number" id="customWidth" value="5" class="w-full border rounded-lg p-2 text-xs" placeholder="L cm">
+                            <input type="number" id="customHeight" value="5" class="w-full border rounded-lg p-2 text-xs" placeholder="T cm">
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <button onclick="adjustQty(-1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">-</button>
+                            <input type="number" id="qtyInput" value="1" min="1" class="flex-1 text-center border-none rounded-lg p-1.5 text-xs font-bold bg-gray-50">
+                            <button onclick="adjustQty(1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <button onclick="addToPaper()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 text-[11px] uppercase tracking-widest">
+                        Tambah ke Kertas
+                    </button>
+
+                    <div class="pt-3 border-t space-y-2">
+                        <button onclick="window.print()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">Cetak Dokumen</button>
+                        <button onclick="clearPaper()" class="w-full text-red-500 font-bold py-1 text-[10px] text-center block opacity-60 hover:opacity-100">Bersihkan Semua</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area Pratinjau -->
+            <div class="lg:col-span-3">
+                <div class="flex justify-between items-center mb-4 no-print px-1">
+                    <div class="flex flex-col">
+                        <h2 class="text-xl font-black text-gray-800 tracking-tighter uppercase">Pratinjau Kertas</h2>
+                        <span id="paperInfoLabel" class="text-[10px] text-gray-400 font-bold uppercase">A4 - Menegak</span>
+                    </div>
+                    <div id="statusBadge" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">Kosong</div>
+                </div>
+                
+                <div class="canvas-container overflow-auto rounded-3xl border border-gray-100">
+                    <div id="printArea" class="print-paper">
+                        <div class="empty-state no-print" id="emptyMessage">
+                            <p class="text-xs font-bold tracking-widest uppercase text-slate-300">Siap Cetak</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pemberitahuan -->
+    <div id="notification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl transform translate-y-32 transition-all duration-300 no-print z-50 text-xs font-bold uppercase tracking-widest">
+        <span id="notifText">Sistem</span>
+    </div>
+
+    <script>
+        let currentPhotoData = null;
+        let currentPaper = 'A4';
+        let currentOrientation = 'portrait';
+
+        const paperDimensions = {
+            'A4': { w: 210, h: 297 },
+            'F4': { w: 215, h: 330 },
+            'A3': { w: 297, h: 420 }
+        };
+
+        function handleLogin() {
+            if (document.getElementById('usernameInput').value.trim().toUpperCase() === 'FAMI') {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('appContent').classList.remove('hidden');
+                document.getElementById('appContent').classList.add('fade-in');
+                updatePaperSize();
+                setMargin('10mm');
+            } else {
+                showNotification("Akses Ditolak!");
+            }
+        }
+
+        function handleLogout() {
+            currentPhotoData = null;
+            clearPaper();
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('appContent').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        function updatePaperSize() {
+            const dims = paperDimensions[currentPaper];
+            let width = dims.w, height = dims.h;
+            if (currentOrientation === 'landscape') [width, height] = [height, width];
+            
+            document.documentElement.style.setProperty('--paper-width', `${width}mm`);
+            document.documentElement.style.setProperty('--paper-height', `${height}mm`);
+            
+            document.getElementById('paperInfoLabel').textContent = `${currentPaper} - ${currentOrientation === 'portrait' ? 'Menegak' : 'Melintang'}`;
+        }
+
+        function setMargin(value) {
+            document.documentElement.style.setProperty('--paper-margin', value);
+            const area = document.getElementById('printArea');
+            if (area) {
+                area.style.padding = value;
+            }
+            showNotification(`Margin: ${value}`);
+        }
+
+        function setPaper(type) {
+            currentPaper = type;
+            ['A4', 'F4', 'A3'].forEach(k => {
+                document.getElementById(`btn-${k.toLowerCase()}`).className = "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all text-gray-500";
+            });
+            document.getElementById(`btn-${type.toLowerCase()}`).className = "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white shadow-sm text-blue-700";
+            updatePaperSize();
+        }
+
+        function setOrientation(mode) {
+            currentOrientation = mode;
+            const p = document.getElementById('btn-portrait'), l = document.getElementById('btn-landscape');
+            p.className = mode === 'portrait' ? "flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-white shadow-sm text-blue-700" : "flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500";
+            l.className = mode === 'landscape' ? "flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-white shadow-sm text-blue-700" : "flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500";
+            updatePaperSize();
+        }
+
+        function adjustQty(val) {
+            const i = document.getElementById('qtyInput');
+            i.value = Math.max(1, (parseInt(i.value) || 1) + val);
+        }
+
+        function toggleCustomInputs() {
+            document.getElementById('customSizeGroup').classList.toggle('hidden', document.getElementById('sizeSelect').value !== 'custom');
+        }
+
+        document.getElementById('photoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentPhotoData = event.target.result;
+                    document.getElementById('fileNameDisplay').textContent = file.name;
+                    showNotification("Foto Berhasil Dimuat");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function addPresetRow() {
+            if (!currentPhotoData) { showNotification("Muat Naik Foto Dahulu!"); return; }
+            
+            const presetItems = [
+                { size: 'size-2x3', q: 2 },
+                { size: 'size-3x4', q: 2 },
+                { size: 'size-4x6', q: 2 }
+            ];
+
+            const area = document.getElementById('printArea');
+            document.getElementById('emptyMessage').style.display = 'none';
+
+            presetItems.forEach(item => {
+                for (let i = 0; i < item.q; i++) {
+                    createPhotoElement(item.size, area);
+                }
+            });
+
+            updateStatus();
+            showNotification("Paket Baris Ditambahkan");
+        }
+
+        function addToPaper() {
+            if (!currentPhotoData) { showNotification("Muat Naik Foto Dahulu!"); return; }
+            const size = document.getElementById('sizeSelect').value;
+            const qty = parseInt(document.getElementById('qtyInput').value) || 1;
+            const area = document.getElementById('printArea');
+            document.getElementById('emptyMessage').style.display = 'none';
+            
+            for (let i = 0; i < qty; i++) {
+                if (size === 'custom') {
+                    const w = document.getElementById('customWidth').value;
+                    const h = document.getElementById('customHeight').value;
+                    createPhotoElement('custom', area, w, h);
+                } else {
+                    createPhotoElement(size, area);
+                }
+            }
+            updateStatus();
+            showNotification(`${qty} Foto Ditambahkan`);
+        }
+
+        function createPhotoElement(sizeClass, container, customW, customH) {
+            const div = document.createElement('div');
+            div.className = 'photo-item fade-in';
+            
+            if (sizeClass === 'custom') {
+                div.style.width = `${customW}cm`;
+                div.style.height = `${customH}cm`;
+            } else {
+                div.classList.add(sizeClass);
+            }
+            
+            const img = document.createElement('img');
+            img.src = currentPhotoData;
+            img.className = 'w-full h-full object-cover pointer-events-none';
+            div.appendChild(img);
+            
+            const btn = document.createElement('div');
+            btn.className = 'remove-btn no-print';
+            btn.innerHTML = '×';
+            btn.onclick = (e) => { 
+                e.stopPropagation();
+                div.remove(); 
+                updateStatus(); 
+            };
+            
+            div.appendChild(btn);
+            container.appendChild(div);
+        }
+
+        function clearPaper() {
+            const items = document.querySelectorAll('.photo-item');
+            if (items.length > 0) {
+                items.forEach(i => i.remove());
+                updateStatus();
+                showNotification("Kanvas Dibersihkan");
+            }
+        }
+
+        function updateStatus() {
+            const count = document.querySelectorAll('.photo-item').length;
+            const badge = document.getElementById('statusBadge');
+            const msg = document.getElementById('emptyMessage');
+            
+            badge.textContent = count > 0 ? `${count} FOTO` : 'KOSONG';
+            badge.className = count > 0 ? "bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" : "bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider";
+            
+            msg.style.display = count > 0 ? 'none' : 'flex';
+        }
+
+        function showNotification(msg) {
+            const n = document.getElementById('notification');
+            document.getElementById('notifText').textContent = msg;
+            n.classList.remove('translate-y-32');
+            setTimeout(() => n.classList.add('translate-y-32'), 2500);
+        }
+
+        document.getElementById('usernameInput').addEventListener('keypress', (e) => e.key === 'Enter' && handleLogin());
+    </script>
+</body>
+</html>
