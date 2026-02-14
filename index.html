@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Studio Pro - Interactive Layout</title>
+    <title>Photo Studio Pro - Fami Collection</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -24,6 +24,16 @@
             overflow: hidden;
             height: 100vh;
             user-select: none;
+        }
+
+        .app-header {
+            height: 50px;
+            background-color: var(--ps-medium);
+            border-bottom: 1px solid #111;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 50;
         }
 
         .side-bar { width: 50px; background-color: var(--ps-medium); border-right: 1px solid #111; }
@@ -49,7 +59,7 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
             position: relative;
             box-sizing: border-box;
-            overflow: hidden; /* Konten tidak boleh keluar kertas saat diprint */
+            overflow: hidden;
         }
 
         .size-a4 { width: 210mm; height: 297mm; }
@@ -57,7 +67,7 @@
         .size-a3 { width: 297mm; height: 420mm; }
 
         .photo-layer {
-            position: absolute; /* Penting untuk bebas geser */
+            position: absolute;
             border: 1px solid rgba(0,120,212, 0.5);
             background-size: cover;
             background-position: center;
@@ -67,7 +77,7 @@
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
             box-sizing: border-box;
-            touch-action: none; /* Mencegah scroll saat drag di mobile */
+            touch-action: none;
         }
 
         .photo-layer.active {
@@ -101,7 +111,7 @@
         @media print {
             @page { margin: 0; size: auto; }
             body { background: white !important; margin: 0 !important; padding: 0 !important; }
-            .no-print { display: none !important; }
+            .no-print, .app-header { display: none !important; }
             .main-workspace { background: white !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; display: block !important;}
             .canvas-container { padding: 0 !important; margin: 0 !important; display: block !important; }
             .paper-canvas {
@@ -149,14 +159,25 @@
         <p class="text-sm font-bold uppercase tracking-widest">Memproses PDF...</p>
     </div>
 
+    <!-- Header Bersih tanpa Menu Navigasi -->
+    <header class="app-header no-print">
+        <div class="flex items-center gap-3">
+            <img src="https://iili.io/qHtJoKX.png" alt="Logo" class="h-8 w-auto object-contain">
+            <div class="h-6 w-px bg-gray-700 mx-1"></div>
+            <h1 class="text-xs font-bold tracking-tighter text-white uppercase italic">Photo Print Studio <span class="text-blue-500">Fami Collection</span></h1>
+        </div>
+        <!-- Menu navigasi kanan telah dihapus -->
+    </header>
+
     <div class="flex flex-1 overflow-hidden">
         
+        <!-- Sidebar Minimalis -->
         <div class="side-bar flex flex-col items-center py-4 no-print">
             <div id="sidebarPaperLabel" class="mt-auto p-2 text-gray-700 text-[10px] font-bold">A4</div>
         </div>
 
         <div class="main-workspace no-print-bg">
-            <div class="instruction-tip no-print">Klik dan tarik foto untuk mengatur posisi</div>
+            <div class="instruction-tip no-print">Klik dan tarik foto untuk mengatur posisi di kanvas</div>
             <div class="canvas-container">
                 <div id="printArea" class="paper-canvas size-a4">
                     <!-- Foto akan muncul di sini -->
@@ -165,7 +186,7 @@
         </div>
 
         <div class="right-panel flex flex-col no-print">
-            <div class="p-4 border-bottom border-black overflow-y-auto max-h-[65vh]">
+            <div class="p-4 border-bottom border-black overflow-y-auto max-h-[60vh]">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-white mb-4">PENGATURAN FOTO</h3>
                 
                 <div class="space-y-4">
@@ -186,7 +207,7 @@
                         <button onclick="document.getElementById('imageInput').click()" class="w-full bg-ps-light hover:bg-gray-600 border border-gray-500 py-1.5 text-xs rounded text-white transition">
                             Pilih Gambar
                         </button>
-                        <div id="fileNameDisplay" class="text-[10px] mt-1 text-blue-400 italic truncate">Belum dipilih</div>
+                        <div id="fileNameDisplay" class="text-[10px] mt-1 text-blue-400 italic truncate text-center">Belum dipilih</div>
                     </div>
 
                     <hr class="border-gray-700">
@@ -236,16 +257,17 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-2 mt-2">
-                        <button onclick="handlePrintAction()" class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 text-[10px] rounded shadow-lg uppercase">
+                        <button onclick="handlePrintAction()" class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 text-[10px] rounded shadow-lg uppercase transition active:scale-95">
                             Cetak
                         </button>
-                        <button onclick="downloadPDFDirect()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 text-[10px] rounded shadow-lg uppercase">
+                        <button onclick="downloadPDFDirect()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 text-[10px] rounded shadow-lg uppercase transition active:scale-95">
                             Download PDF
                         </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Panel Layer -->
             <div class="flex-1 flex flex-col border-t border-[#111]">
                 <div class="bg-ps-light px-4 py-1.5 text-[10px] font-bold text-white flex justify-between items-center">
                     DAFTAR FOTO <span class="bg-black px-2 rounded-full" id="layerCount">0</span>
@@ -253,19 +275,19 @@
                 <div id="layerList" class="flex-1 overflow-y-auto bg-ps-medium p-1 text-[10px]">
                     <div class="text-gray-500 text-center mt-4 italic">Kanvas kosong</div>
                 </div>
-                <div class="bg-ps-light h-10 flex items-center justify-around border-t border-black">
-                    <button onclick="autoLayout()" class="text-[10px] text-blue-400 hover:text-blue-300 uppercase font-bold">Rapi Otomatis</button>
+                <div class="bg-ps-light h-10 flex items-center justify-around border-t border-black px-2">
+                    <button onclick="autoLayout()" class="text-[9px] text-blue-400 hover:text-blue-300 uppercase font-bold">Rapi Otomatis</button>
                     <div class="w-px h-4 bg-gray-700"></div>
-                    <button onclick="clearAll()" class="text-[10px] text-gray-400 hover:text-red-500 uppercase">Hapus Semua</button>
+                    <button onclick="clearAll()" class="text-[9px] text-gray-400 hover:text-red-500 uppercase">Hapus Semua</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="h-6 bg-ps-medium border-t border-black flex items-center px-4 text-[10px] text-gray-500 no-print">
+    <footer class="h-6 bg-ps-medium border-t border-black flex items-center px-4 text-[10px] text-gray-500 no-print">
         <div class="mr-4" id="statusBarPaper">Kanvas: A4</div>
-        <div class="ml-auto opacity-50 tracking-widest uppercase">Photo Print Pro v2.5 • Interactive Layout</div>
-    </div>
+        <div class="ml-auto opacity-50 tracking-widest uppercase">Fami Collection v2.8 • Interactive Layout</div>
+    </footer>
 
     <script>
         const imageInput = document.getElementById('imageInput');
@@ -284,7 +306,6 @@
         let layers = [];
         let activeMode = 'preset';
         
-        // State untuk Dragging
         let isDragging = false;
         let currentTarget = null;
         let startX, startY, initialLeft, initialTop;
@@ -328,7 +349,7 @@
                 let w = parseFloat(document.getElementById('customWidth').value);
                 let h = parseFloat(document.getElementById('customHeight').value);
                 const unit = document.getElementById('customUnit').value;
-                label = `Custom (${w}x${h} ${unit})`;
+                label = `Kustom (${w}x${h} ${unit})`;
                 width = (unit === 'cm') ? w * 10 : w;
                 height = (unit === 'cm') ? h * 10 : h;
             }
@@ -344,11 +365,9 @@
             photoDiv.style.backgroundImage = `url('${currentImageData}')`;
             photoDiv.setAttribute('data-size', `${Math.round(width/10)}x${Math.round(height/10)}cm`);
             
-            // Set posisi awal di pojok kiri atas
-            photoDiv.style.left = '0px';
-            photoDiv.style.top = '0px';
+            photoDiv.style.left = '5mm';
+            photoDiv.style.top = '5mm';
             
-            // Tambahkan event listener untuk drag
             setupDragEvents(photoDiv);
 
             printArea.appendChild(photoDiv);
@@ -370,7 +389,6 @@
                 initialLeft = parseInt(el.style.left) || 0;
                 initialTop = parseInt(el.style.top) || 0;
                 
-                // Pindahkan ke paling depan dalam daftar DOM agar tidak tertutup layer lain saat digeser
                 printArea.appendChild(el);
             };
 
@@ -380,20 +398,16 @@
 
         window.addEventListener('mousemove', (e) => {
             if (!isDragging || !currentTarget) return;
-            
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            
             currentTarget.style.left = (initialLeft + dx) + 'px';
             currentTarget.style.top = (initialTop + dy) + 'px';
         });
 
         window.addEventListener('touchmove', (e) => {
             if (!isDragging || !currentTarget) return;
-            
             const dx = e.touches[0].clientX - startX;
             const dy = e.touches[0].clientY - startY;
-            
             currentTarget.style.left = (initialLeft + dx) + 'px';
             currentTarget.style.top = (initialTop + dy) + 'px';
         });
@@ -413,19 +427,18 @@
         function addLayerItem(id, label, img) {
             if (layers.length === 0) layerList.innerHTML = '';
             const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 p-2 border-b border-[#111] hover:bg-ps-light cursor-pointer transition';
+            div.className = 'flex items-center gap-2 p-2 border-b border-[#111] hover:bg-ps-light cursor-pointer transition group';
             div.id = `panel-layer-${id}`;
             div.innerHTML = `
-                <div class="w-6 h-6 bg-black border border-gray-600 bg-center bg-cover" style="background-image: url(${img})"></div>
+                <div class="w-6 h-6 bg-black border border-gray-600 bg-center bg-cover rounded-sm" style="background-image: url(${img})"></div>
                 <div class="flex-1 truncate">${label}</div>
-                <button onclick="removeLayer(${id})" class="text-red-500 font-bold px-1 hover:scale-125 transition">×</button>
+                <button onclick="removeLayer(${id})" class="text-red-500 font-bold px-1 opacity-0 group-hover:opacity-100 transition">×</button>
             `;
-            // Klik item list untuk highlight foto di kanvas
             div.onclick = () => {
                 const el = document.getElementById(`layer-${id}`);
-                el.style.outline = '4px solid #0078d4';
+                el.style.outline = '3px solid #0078d4';
                 setTimeout(() => el.style.outline = 'none', 1000);
-                printArea.appendChild(el); // Pindah ke depan
+                printArea.appendChild(el);
             };
             layerList.prepend(div);
             layers.push(id);
@@ -452,26 +465,25 @@
             const photos = Array.from(printArea.querySelectorAll('.photo-layer'));
             if (photos.length === 0) return;
 
-            let currentX = 5; // mm
-            let currentY = 5; // mm
+            let currentX = 5; 
+            let currentY = 5; 
             let maxHeightInRow = 0;
-            const paperWidth = printArea.offsetWidth; // dalam px
-
-            // Konversi px ke mm (pendekatan kasar untuk layout)
-            const mmToPx = (mm) => mm * (paperWidth / (paperSelect.value === 'size-a3' ? 297 : 210));
+            const paperWidthPx = printArea.offsetWidth;
+            const paperWidthMm = paperSelect.value === 'size-a3' ? 297 : 210;
+            const mmToPxFactor = paperWidthPx / paperWidthMm;
 
             photos.forEach(photo => {
                 const wMm = parseFloat(photo.style.width);
                 const hMm = parseFloat(photo.style.height);
 
-                if (currentX + wMm > (paperWidth / (paperWidth/210)) - 5) {
+                if (currentX + wMm > paperWidthMm - 5) {
                     currentX = 5;
                     currentY += maxHeightInRow + 5;
                     maxHeightInRow = 0;
                 }
 
-                photo.style.left = currentX + 'mm';
-                photo.style.top = currentY + 'mm';
+                photo.style.left = (currentX * mmToPxFactor) + 'px';
+                photo.style.top = (currentY * mmToPxFactor) + 'px';
 
                 currentX += wMm + 2;
                 if (hMm > maxHeightInRow) maxHeightInRow = hMm;
@@ -513,16 +525,15 @@
                 });
 
                 pdf.addImage(imgData, 'JPEG', 0, 0, pW, pH);
-                pdf.save(`PhotoLayout_${new Date().getTime()}.pdf`);
+                pdf.save(`Fami_Collection_${new Date().getTime()}.pdf`);
             } catch (error) {
                 console.error(error);
-                alert('Terjadi kesalahan saat membuat PDF.');
+                alert('Gagal membuat file PDF.');
             } finally {
                 loadingOverlay.style.display = 'none';
             }
         }
 
-        // Jalankan update size di awal
         updatePaperSize();
     </script>
 </body>
