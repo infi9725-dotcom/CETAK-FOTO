@@ -3,563 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FM FOTO - Cetak Pas Foto & R Series</title>
+    <title>Photo Studio Pro - Interactive Layout</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        :root {
+            --ps-dark: #1e1e1e;
+            --ps-medium: #2d2d2d;
+            --ps-light: #3c3c3c;
+            --ps-accent: #0078d4;
+            --ps-text: #cccccc;
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #ffffff;
-        }
-
-        /* Ukuran Kertas & Margin Dinamis */
-        :root {
-            --paper-width: 210mm;
-            --paper-height: 297mm;
-            --paper-margin: 10mm;
-        }
-
-        /* Area Kerja Kanvas */
-        .canvas-container {
-            background-color: #f1f5f9;
-            padding: 40px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-        }
-
-        /* Styling kertas di layar */
-        .print-paper {
-            width: var(--paper-width);
-            min-height: var(--paper-height);
-            padding: var(--paper-margin);
-            margin: 0 auto;
-            background: #ffffff;
-            display: flex;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: 5px;
-            position: relative;
-            transform-origin: top center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05); 
-            border: 1px solid #e2e8f0;
-            transition: padding 0.2s ease-in-out;
-        }
-
-        /* Indikator Margin (Hanya di layar) */
-        .print-paper::after {
-            content: '';
-            position: absolute;
-            top: var(--paper-margin);
-            left: var(--paper-margin);
-            right: var(--paper-margin);
-            bottom: var(--paper-margin);
-            border: 1px dashed #cbd5e1;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* ATURAN CETAK TOTAL */
-        @media print {
-            @page {
-                margin: 0;
-                size: var(--paper-width) var(--paper-height);
-            }
-            
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-                box-shadow: none !important;
-                border: none !important;
-                outline: none !important;
-            }
-
-            .print-paper::after, .no-print {
-                display: none !important;
-            }
-
-            html, body {
-                width: var(--paper-width);
-                height: var(--paper-height);
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important; 
-                background: #ffffff !important;
-            }
-
-            .canvas-container {
-                padding: 0 !important;
-                margin: 0 !important;
-                background: #ffffff !important;
-                display: block !important;
-                min-height: auto !important;
-                border: none !important;
-            }
-
-            .print-paper {
-                margin: 0 !important;
-                padding: var(--paper-margin) !important;
-                width: var(--paper-width) !important;
-                height: var(--paper-height) !important;
-                max-height: var(--paper-height) !important;
-                background: #ffffff !important;
-                gap: 2mm !important; 
-                display: flex !important;
-                flex-wrap: wrap !important;
-                border: none !important;
-                visibility: visible !important;
-                position: static !important;
-            }
-
-            .photo-item {
-                border: none !important;
-                margin: 0 !important;
-                page-break-inside: avoid !important;
-                display: block !important;
-            }
-            
-            .photo-item img {
-                display: block !important;
-                width: 100% !important;
-                height: 100% !important;
-                object-fit: cover !important;
-            }
-        }
-
-        /* Saiz Pas Foto */
-        .size-2x3 { width: 21.5mm; height: 27.5mm; }
-        .size-3x4 { width: 28mm; height: 38mm; }
-        .size-4x6 { width: 38mm; height: 56mm; }
-
-        /* Saiz R Series - LENGKAP */
-        .size-2r { width: 6cm; height: 9cm; }
-        .size-3r { width: 8.9cm; height: 12.7cm; }
-        .size-4r { width: 10.2cm; height: 15.2cm; }
-        .size-5r { width: 12.7cm; height: 17.8cm; }
-        .size-6r { width: 15.2cm; height: 20.3cm; }
-        .size-8r { width: 20.3cm; height: 25.4cm; }
-        .size-10r { width: 25.4cm; height: 30.5cm; }
-        .size-11r { width: 27.9cm; height: 35.6cm; }
-        .size-12r { width: 30.5cm; height: 38.1cm; }
-        .size-14r { width: 35.5cm; height: 43.1cm; }
-        .size-16r { width: 40.6cm; height: 50.8cm; }
-        .size-20r { width: 50.8cm; height: 60.9cm; }
-        .size-22r { width: 50.8cm; height: 74.9cm; }
-        .size-24r { width: 60.9cm; height: 91.4cm; }
-        .size-30r { width: 76.2cm; height: 101.6cm; }
-
-        /* Style Item Foto */
-        .photo-item {
-            border: none !important; 
+            background-color: var(--ps-dark);
+            color: var(--ps-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            page-break-inside: avoid;
-            z-index: 2;
+            height: 100vh;
+            user-select: none;
         }
 
-        .photo-item:hover .remove-btn {
-            opacity: 1;
-        }
+        .side-bar { width: 50px; background-color: var(--ps-medium); border-right: 1px solid #111; }
+        .right-panel { width: 280px; background-color: var(--ps-medium); border-left: 1px solid #111; }
+        .main-workspace { background-color: #111; overflow: auto; position: relative; flex-grow: 1; }
 
-        .remove-btn {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
+        .canvas-container {
+            padding: 50px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 10;
+            min-width: fit-content;
         }
 
-        .empty-state {
-            width: 100%;
-            height: 200px;
-            display: flex;
+        .paper-canvas {
+            background-color: white;
+            background-image: 
+                linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden; /* Konten tidak boleh keluar kertas saat diprint */
+        }
+
+        .size-a4 { width: 210mm; height: 297mm; }
+        .size-f4 { width: 215mm; height: 330mm; }
+        .size-a3 { width: 297mm; height: 420mm; }
+
+        .photo-layer {
+            position: absolute; /* Penting untuk bebas geser */
+            border: 1px solid rgba(0,120,212, 0.5);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            cursor: move;
+            background-color: #eee;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            box-sizing: border-box;
+            touch-action: none; /* Mencegah scroll saat drag di mobile */
+        }
+
+        .photo-layer.active {
+            border: 2px solid var(--ps-accent);
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .photo-layer::after {
+            content: attr(data-size);
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            color: #666;
+            font-size: 9px;
+            white-space: nowrap;
+        }
+
+        .tab-btn {
+            font-size: 9px;
+            font-weight: bold;
+            padding: 6px 4px;
+            border-bottom: 2px solid transparent;
+            color: #666;
+        }
+        .tab-btn.active {
+            border-bottom-color: var(--ps-accent);
+            color: white;
+        }
+
+        @media print {
+            @page { margin: 0; size: auto; }
+            body { background: white !important; margin: 0 !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .main-workspace { background: white !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; display: block !important;}
+            .canvas-container { padding: 0 !important; margin: 0 !important; display: block !important; }
+            .paper-canvas {
+                box-shadow: none !important;
+                background: white !important;
+                background-image: none !important;
+                margin: 0 !important;
+                border: none !important;
+                position: relative !important;
+            }
+            .photo-layer { border: none !important; }
+            .photo-layer::after { display: none !important; }
+        }
+        
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
+            color: white;
         }
 
-        .fade-in {
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .instruction-tip {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 10px;
+            color: #aaa;
+            pointer-events: none;
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="flex flex-col">
 
-    <!-- Section Login -->
-    <div id="loginSection" class="fixed inset-0 z-[100] bg-blue-700 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
-            <div class="flex flex-col items-center">
-                <!-- Logo FAMI COLLECTION Login -->
-                <div class="mb-4">
-                    <img src="https://iili.io/fWoXBgp.png" alt="Logo FAMI COLLECTION" class="h-24 w-auto object-contain drop-shadow-md" onerror="this.src='https://iili.io/fWoXBgp.th.png'">
-                </div>
-                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">FAMI COLLECTION</h1>
-                <!-- Teks URL ditukar menjadi warna biru (text-blue-600) -->
-                <p class="text-blue-600 text-xs font-bold">www.famicollection.my.id</p>
-            </div>
-            
-            <div class="space-y-4 text-left">
-                <input type="text" id="usernameInput" placeholder="Masukkan Nama Pengguna..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all font-medium text-sm">
-                <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-95 uppercase text-xs tracking-widest">
-                    Masuk Aplikasi
-                </button>
-            </div>
-        </div>
+    <div id="loadingOverlay">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+        <p class="text-sm font-bold uppercase tracking-widest">Memproses PDF...</p>
     </div>
 
-    <!-- Kandungan Utama -->
-    <div id="appContent" class="hidden">
-        <nav class="bg-blue-700 text-white shadow-md no-print sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="p-1 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                        <!-- Logo Navbar -->
-                        <img src="https://iili.io/fWoXBgp.png" alt="Logo" class="h-8 w-auto object-contain" onerror="this.src='https://iili.io/fWoXBgp.th.png'">
-                    </div>
-                    <span class="text-xl font-black uppercase tracking-tighter">FM FOTO</span>
+    <div class="flex flex-1 overflow-hidden">
+        
+        <div class="side-bar flex flex-col items-center py-4 no-print">
+            <div id="sidebarPaperLabel" class="mt-auto p-2 text-gray-700 text-[10px] font-bold">A4</div>
+        </div>
+
+        <div class="main-workspace no-print-bg">
+            <div class="instruction-tip no-print">Klik dan tarik foto untuk mengatur posisi</div>
+            <div class="canvas-container">
+                <div id="printArea" class="paper-canvas size-a4">
+                    <!-- Foto akan muncul di sini -->
                 </div>
-                
-                <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-1.5 rounded-lg transition-all text-xs uppercase">
-                    Keluar
-                </button>
             </div>
-        </nav>
+        </div>
 
-        <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Sidebar Panel -->
-            <div class="lg:col-span-1 no-print">
-                <div class="bg-white p-5 rounded-2xl shadow-lg border border-gray-100 space-y-4">
-                    <h2 class="text-sm font-black uppercase tracking-widest text-gray-800 border-b pb-2">Konfigurasi</h2>
+        <div class="right-panel flex flex-col no-print">
+            <div class="p-4 border-bottom border-black overflow-y-auto max-h-[65vh]">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-white mb-4">PENGATURAN FOTO</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] block mb-1 text-gray-500 font-bold uppercase">Ukuran Kertas</label>
+                        <select id="paperSelect" onchange="updatePaperSize()" class="w-full bg-[#111] border border-gray-600 text-xs p-1.5 text-white">
+                            <option value="size-a4" selected>A4 (210 x 297 mm)</option>
+                            <option value="size-f4">F4 / Folio (215 x 330 mm)</option>
+                            <option value="size-a3">A3 (297 x 420 mm)</option>
+                        </select>
+                    </div>
 
-                    <div class="space-y-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">Kertas</label>
-                            <div class="flex bg-gray-50 p-1 rounded-xl gap-1">
-                                <button onclick="setPaper('A4')" id="btn-a4" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white shadow-sm text-blue-700">A4</button>
-                                <button onclick="setPaper('F4')" id="btn-f4" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500">F4</button>
-                                <button onclick="setPaper('A3')" id="btn-a3" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500">A3</button>
-                            </div>
+                    <hr class="border-gray-700">
+
+                    <div>
+                        <label class="text-[10px] block mb-1 text-gray-500 font-bold uppercase">Unggah Foto</label>
+                        <input type="file" id="imageInput" accept="image/*" class="hidden">
+                        <button onclick="document.getElementById('imageInput').click()" class="w-full bg-ps-light hover:bg-gray-600 border border-gray-500 py-1.5 text-xs rounded text-white transition">
+                            Pilih Gambar
+                        </button>
+                        <div id="fileNameDisplay" class="text-[10px] mt-1 text-blue-400 italic truncate">Belum dipilih</div>
+                    </div>
+
+                    <hr class="border-gray-700">
+
+                    <div>
+                        <div class="flex border-b border-gray-700 mb-3">
+                            <button id="tabPreset" onclick="switchMode('preset')" class="tab-btn active flex-1 uppercase">Preset</button>
+                            <button id="tabCustom" onclick="switchMode('custom')" class="tab-btn flex-1 uppercase">Kustom</button>
                         </div>
 
-                        <div class="space-y-1.5 bg-blue-50 p-3 rounded-xl border border-blue-100">
-                            <label class="text-[10px] font-black uppercase text-blue-700">Margin Cetak</label>
-                            <select id="marginSelect" onchange="setMargin(this.value)" class="w-full bg-white border border-blue-200 rounded-lg p-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none">
-                                <option value="0mm">Tanpa Margin (0mm)</option>
-                                <option value="5mm">Kecil (5mm)</option>
-                                <option value="10mm" selected>Standard (10mm)</option>
-                                <option value="15mm">Lebar (15mm)</option>
+                        <div id="presetView" class="space-y-3">
+                            <select id="sizeSelect" class="w-full bg-[#111] border border-gray-600 text-xs p-1.5 text-white">
+                                <optgroup label="Pas Foto" class="bg-gray-800">
+                                    <option value="20x30">2 x 3 cm</option>
+                                    <option value="30x40">3 x 4 cm</option>
+                                    <option value="40x60">4 x 6 cm</option>
+                                </optgroup>
+                                <optgroup label="Ukuran Populer" class="bg-gray-800">
+                                    <option value="60x90">2R (6 x 9 cm)</option>
+                                    <option value="89x127">3R (8.9 x 12.7 cm)</option>
+                                    <option value="102x152" selected>4R (10 x 15 cm)</option>
+                                    <option value="127x178">5R (12.7 x 17.8 cm)</option>
+                                    <option value="203x254">8R (20.3 x 25.4 cm)</option>
+                                    <option value="210x297">Full A4</option>
+                                </optgroup>
                             </select>
                         </div>
 
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">Orientasi</label>
-                            <div class="flex bg-gray-50 p-1 rounded-xl gap-1">
-                                <button onclick="setOrientation('portrait')" id="btn-portrait" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-white shadow-sm text-blue-700">Menegak</button>
-                                <button onclick="setOrientation('landscape')" id="btn-landscape" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500">Melintang</button>
+                        <div id="customView" class="hidden space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="customWidth" value="10" class="bg-[#111] border border-gray-600 text-xs p-1.5 text-white" placeholder="Lebar">
+                                <input type="number" id="customHeight" value="15" class="bg-[#111] border border-gray-600 text-xs p-1.5 text-white" placeholder="Tinggi">
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-1.5 pt-2 border-t">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">1. Muat Naik Foto</label>
-                        <div class="relative group">
-                            <input type="file" id="photoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            <div class="border border-dashed border-gray-300 rounded-xl p-3 text-center bg-gray-50 group-hover:border-blue-400 transition-all">
-                                <span class="text-[10px] font-medium text-gray-400" id="fileNameDisplay">Pilih Fail...</span>
-                            </div>
+                            <select id="customUnit" class="w-full bg-[#111] border border-gray-600 text-xs p-1.5 text-white">
+                                <option value="cm">cm</option>
+                                <option value="mm">mm</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="pt-1">
-                        <button onclick="addPresetRow()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-[10px] uppercase flex items-center justify-center gap-2">
-                            Paket Baris (2x3, 3x4, 4x6) x 2
-                        </button>
-                    </div>
-
-                    <div class="space-y-1.5 border-t pt-2">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">2. Saiz & Jumlah</label>
-                        <select id="sizeSelect" onchange="toggleCustomInputs()" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs font-bold outline-none">
-                            <optgroup label="Pas Foto">
-                                <option value="size-2x3">2x3 cm</option>
-                                <option value="size-3x4" selected>3x4 cm</option>
-                                <option value="size-4x6">4x6 cm</option>
-                            </optgroup>
-                            <optgroup label="R Series">
-                                <option value="size-2r">2R (6x9 cm)</option>
-                                <option value="size-3r">3R (8.9x12.7 cm)</option>
-                                <option value="size-4r">4R (10.2x15.2 cm)</option>
-                                <option value="size-5r">5R (12.7x17.8 cm)</option>
-                                <option value="size-6r">6R (15.2x20.3 cm)</option>
-                                <option value="size-8r">8R (20.3x25.4 cm)</option>
-                                <option value="size-10r">10R (25.4x30.5 cm)</option>
-                                <option value="size-11r">11R (27.9x35.6 cm)</option>
-                                <option value="size-12r">12R (30.5x38.1 cm)</option>
-                                <option value="size-14r">14R (35.5x43.1 cm)</option>
-                                <option value="size-16r">16R (40.6x50.8 cm)</option>
-                                <option value="size-20r">20R (50.8x60.9 cm)</option>
-                                <option value="size-22r">22R (50.8x74.9 cm)</option>
-                                <option value="size-24r">24R (60.9x91.4 cm)</option>
-                                <option value="size-30r">30R (76.2x101.6 cm)</option>
-                            </optgroup>
-                            <option value="custom">Tersuai...</option>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="orientSelect" class="w-full bg-[#111] border border-gray-600 text-xs p-1.5 text-white">
+                            <option value="portrait">Potret</option>
+                            <option value="landscape">Lanskap</option>
                         </select>
-                        <div id="customSizeGroup" class="hidden grid grid-cols-2 gap-2 mt-1">
-                            <input type="number" id="customWidth" value="5" class="w-full border rounded-lg p-2 text-xs" placeholder="L cm">
-                            <input type="number" id="customHeight" value="5" class="w-full border rounded-lg p-2 text-xs" placeholder="T cm">
-                        </div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <button onclick="adjustQty(-1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">-</button>
-                            <input type="number" id="qtyInput" value="1" min="1" class="flex-1 text-center border-none rounded-lg p-1.5 text-xs font-bold bg-gray-50">
-                            <button onclick="adjustQty(1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">+</button>
-                        </div>
+                        <button onclick="addPhoto()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 text-xs rounded uppercase tracking-wider">Tambah</button>
                     </div>
 
-                    <button onclick="addToPaper()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 text-[11px] uppercase tracking-widest">
-                        Tambah ke Kertas
-                    </button>
-
-                    <div class="pt-3 border-t space-y-2">
-                        <button onclick="window.print()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">Cetak Dokumen</button>
-                        <button onclick="clearPaper()" class="w-full text-red-500 font-bold py-1 text-[10px] text-center block opacity-60 hover:opacity-100">Bersihkan Semua</button>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <button onclick="handlePrintAction()" class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 text-[10px] rounded shadow-lg uppercase">
+                            Cetak
+                        </button>
+                        <button onclick="downloadPDFDirect()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 text-[10px] rounded shadow-lg uppercase">
+                            Download PDF
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Area Pratinjau -->
-            <div class="lg:col-span-3">
-                <div class="flex justify-between items-center mb-4 no-print px-1">
-                    <div class="flex flex-col">
-                        <h2 class="text-xl font-black text-gray-800 tracking-tighter uppercase">Pratinjau Kertas</h2>
-                        <span id="paperInfoLabel" class="text-[10px] text-gray-400 font-bold uppercase">A4 - Menegak</span>
-                    </div>
-                    <div id="statusBadge" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">Kosong</div>
+            <div class="flex-1 flex flex-col border-t border-[#111]">
+                <div class="bg-ps-light px-4 py-1.5 text-[10px] font-bold text-white flex justify-between items-center">
+                    DAFTAR FOTO <span class="bg-black px-2 rounded-full" id="layerCount">0</span>
                 </div>
-                
-                <div class="canvas-container overflow-auto rounded-3xl border border-gray-100">
-                    <div id="printArea" class="print-paper">
-                        <div class="empty-state no-print" id="emptyMessage">
-                            <p class="text-xs font-bold tracking-widest uppercase text-slate-300">Siap Cetak</p>
-                        </div>
-                    </div>
+                <div id="layerList" class="flex-1 overflow-y-auto bg-ps-medium p-1 text-[10px]">
+                    <div class="text-gray-500 text-center mt-4 italic">Kanvas kosong</div>
+                </div>
+                <div class="bg-ps-light h-10 flex items-center justify-around border-t border-black">
+                    <button onclick="autoLayout()" class="text-[10px] text-blue-400 hover:text-blue-300 uppercase font-bold">Rapi Otomatis</button>
+                    <div class="w-px h-4 bg-gray-700"></div>
+                    <button onclick="clearAll()" class="text-[10px] text-gray-400 hover:text-red-500 uppercase">Hapus Semua</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Pemberitahuan -->
-    <div id="notification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl transform translate-y-32 transition-all duration-300 no-print z-50 text-xs font-bold uppercase tracking-widest">
-        <span id="notifText">Sistem</span>
+    <div class="h-6 bg-ps-medium border-t border-black flex items-center px-4 text-[10px] text-gray-500 no-print">
+        <div class="mr-4" id="statusBarPaper">Kanvas: A4</div>
+        <div class="ml-auto opacity-50 tracking-widest uppercase">Photo Print Pro v2.5 • Interactive Layout</div>
     </div>
 
     <script>
-        let currentPhotoData = null;
-        let currentPaper = 'A4';
-        let currentOrientation = 'portrait';
+        const imageInput = document.getElementById('imageInput');
+        const paperSelect = document.getElementById('paperSelect');
+        const sizeSelect = document.getElementById('sizeSelect');
+        const orientSelect = document.getElementById('orientSelect');
+        const printArea = document.getElementById('printArea');
+        const layerList = document.getElementById('layerList');
+        const layerCountLabel = document.getElementById('layerCount');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const statusBarPaper = document.getElementById('statusBarPaper');
+        const sidebarLabel = document.getElementById('sidebarPaperLabel');
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
-        const paperDimensions = {
-            'A4': { w: 210, h: 297 },
-            'F4': { w: 215, h: 330 },
-            'A3': { w: 297, h: 420 }
-        };
+        let currentImageData = null;
+        let layers = [];
+        let activeMode = 'preset';
+        
+        // State untuk Dragging
+        let isDragging = false;
+        let currentTarget = null;
+        let startX, startY, initialLeft, initialTop;
 
-        function handleLogin() {
-            if (document.getElementById('usernameInput').value.trim().toUpperCase() === 'FAMI') {
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('appContent').classList.remove('hidden');
-                document.getElementById('appContent').classList.add('fade-in');
-                updatePaperSize();
-                setMargin('10mm');
-            } else {
-                showNotification("Akses Ditolak!");
-            }
-        }
-
-        function handleLogout() {
-            currentPhotoData = null;
-            clearPaper();
-            document.getElementById('usernameInput').value = '';
-            document.getElementById('appContent').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
+        function switchMode(mode) {
+            activeMode = mode;
+            document.getElementById('presetView').classList.toggle('hidden', mode !== 'preset');
+            document.getElementById('customView').classList.toggle('hidden', mode === 'preset');
+            document.getElementById('tabPreset').classList.toggle('active', mode === 'preset');
+            document.getElementById('tabCustom').classList.toggle('active', mode !== 'preset');
         }
 
         function updatePaperSize() {
-            const dims = paperDimensions[currentPaper];
-            let width = dims.w, height = dims.h;
-            if (currentOrientation === 'landscape') [width, height] = [height, width];
-            
-            document.documentElement.style.setProperty('--paper-width', `${width}mm`);
-            document.documentElement.style.setProperty('--paper-height', `${height}mm`);
-            
-            document.getElementById('paperInfoLabel').textContent = `${currentPaper} - ${currentOrientation === 'portrait' ? 'Menegak' : 'Melintang'}`;
+            const selectedSize = paperSelect.value;
+            printArea.className = `paper-canvas ${selectedSize}`;
+            statusBarPaper.textContent = `Kanvas: ${paperSelect.options[paperSelect.selectedIndex].text}`;
+            sidebarLabel.textContent = paperSelect.options[paperSelect.selectedIndex].text.split(' ')[0];
         }
 
-        function setMargin(value) {
-            document.documentElement.style.setProperty('--paper-margin', value);
-            const area = document.getElementById('printArea');
-            if (area) {
-                area.style.padding = value;
-            }
-            showNotification(`Margin: ${value}`);
-        }
-
-        function setPaper(type) {
-            currentPaper = type;
-            ['A4', 'F4', 'A3'].forEach(k => {
-                document.getElementById(`btn-${k.toLowerCase()}`).className = "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all text-gray-500";
-            });
-            document.getElementById(`btn-${type.toLowerCase()}`).className = "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white shadow-sm text-blue-700";
-            updatePaperSize();
-        }
-
-        function setOrientation(mode) {
-            currentOrientation = mode;
-            const p = document.getElementById('btn-portrait'), l = document.getElementById('btn-landscape');
-            p.className = mode === 'portrait' ? "flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-white shadow-sm text-blue-700" : "flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500";
-            l.className = mode === 'landscape' ? "flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-white shadow-sm text-blue-700" : "flex-1 py-1.5 text-[10px] font-bold rounded-lg text-gray-500";
-            updatePaperSize();
-        }
-
-        function adjustQty(val) {
-            const i = document.getElementById('qtyInput');
-            i.value = Math.max(1, (parseInt(i.value) || 1) + val);
-        }
-
-        function toggleCustomInputs() {
-            document.getElementById('customSizeGroup').classList.toggle('hidden', document.getElementById('sizeSelect').value !== 'custom');
-        }
-
-        document.getElementById('photoInput').addEventListener('change', function(e) {
+        imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                fileNameDisplay.textContent = file.name;
                 const reader = new FileReader();
-                reader.onload = (event) => {
-                    currentPhotoData = event.target.result;
-                    document.getElementById('fileNameDisplay').textContent = file.name;
-                    showNotification("Foto Berhasil Dimuat");
-                };
+                reader.onload = (event) => { currentImageData = event.target.result; };
                 reader.readAsDataURL(file);
             }
         });
 
-        function addPresetRow() {
-            if (!currentPhotoData) { showNotification("Muat Naik Foto Dahulu!"); return; }
-            
-            const presetItems = [
-                { size: 'size-2x3', q: 2 },
-                { size: 'size-3x4', q: 2 },
-                { size: 'size-4x6', q: 2 }
-            ];
+        function addPhoto() {
+            if (!currentImageData) return alert('Pilih foto terlebih dahulu!');
 
-            const area = document.getElementById('printArea');
-            document.getElementById('emptyMessage').style.display = 'none';
+            let width, height, label;
+            const orientation = orientSelect.value;
 
-            presetItems.forEach(item => {
-                for (let i = 0; i < item.q; i++) {
-                    createPhotoElement(item.size, area);
-                }
-            });
-
-            updateStatus();
-            showNotification("Paket Baris Ditambahkan");
-        }
-
-        function addToPaper() {
-            if (!currentPhotoData) { showNotification("Muat Naik Foto Dahulu!"); return; }
-            const size = document.getElementById('sizeSelect').value;
-            const qty = parseInt(document.getElementById('qtyInput').value) || 1;
-            const area = document.getElementById('printArea');
-            document.getElementById('emptyMessage').style.display = 'none';
-            
-            for (let i = 0; i < qty; i++) {
-                if (size === 'custom') {
-                    const w = document.getElementById('customWidth').value;
-                    const h = document.getElementById('customHeight').value;
-                    createPhotoElement('custom', area, w, h);
-                } else {
-                    createPhotoElement(size, area);
-                }
-            }
-            updateStatus();
-            showNotification(`${qty} Foto Ditambahkan`);
-        }
-
-        function createPhotoElement(sizeClass, container, customW, customH) {
-            const div = document.createElement('div');
-            div.className = 'photo-item fade-in';
-            
-            if (sizeClass === 'custom') {
-                div.style.width = `${customW}cm`;
-                div.style.height = `${customH}cm`;
+            if (activeMode === 'preset') {
+                const sizeValue = sizeSelect.value;
+                [width, height] = sizeValue.split('x');
+                label = sizeSelect.options[sizeSelect.selectedIndex].text;
             } else {
-                div.classList.add(sizeClass);
+                let w = parseFloat(document.getElementById('customWidth').value);
+                let h = parseFloat(document.getElementById('customHeight').value);
+                const unit = document.getElementById('customUnit').value;
+                label = `Custom (${w}x${h} ${unit})`;
+                width = (unit === 'cm') ? w * 10 : w;
+                height = (unit === 'cm') ? h * 10 : h;
             }
+
+            if (orientation === 'landscape') [width, height] = [height, width];
+
+            const layerId = Date.now();
+            const photoDiv = document.createElement('div');
+            photoDiv.className = 'photo-layer';
+            photoDiv.id = `layer-${layerId}`;
+            photoDiv.style.width = width + 'mm';
+            photoDiv.style.height = height + 'mm';
+            photoDiv.style.backgroundImage = `url('${currentImageData}')`;
+            photoDiv.setAttribute('data-size', `${Math.round(width/10)}x${Math.round(height/10)}cm`);
             
-            const img = document.createElement('img');
-            img.src = currentPhotoData;
-            img.className = 'w-full h-full object-cover pointer-events-none';
-            div.appendChild(img);
+            // Set posisi awal di pojok kiri atas
+            photoDiv.style.left = '0px';
+            photoDiv.style.top = '0px';
             
-            const btn = document.createElement('div');
-            btn.className = 'remove-btn no-print';
-            btn.innerHTML = '×';
-            btn.onclick = (e) => { 
-                e.stopPropagation();
-                div.remove(); 
-                updateStatus(); 
+            // Tambahkan event listener untuk drag
+            setupDragEvents(photoDiv);
+
+            printArea.appendChild(photoDiv);
+            addLayerItem(layerId, label, currentImageData);
+            updateStatus();
+        }
+
+        function setupDragEvents(el) {
+            const handleStart = (e) => {
+                isDragging = true;
+                currentTarget = el;
+                el.classList.add('active');
+                
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                
+                startX = clientX;
+                startY = clientY;
+                initialLeft = parseInt(el.style.left) || 0;
+                initialTop = parseInt(el.style.top) || 0;
+                
+                // Pindahkan ke paling depan dalam daftar DOM agar tidak tertutup layer lain saat digeser
+                printArea.appendChild(el);
             };
-            
-            div.appendChild(btn);
-            container.appendChild(div);
+
+            el.addEventListener('mousedown', handleStart);
+            el.addEventListener('touchstart', handleStart);
         }
 
-        function clearPaper() {
-            const items = document.querySelectorAll('.photo-item');
-            if (items.length > 0) {
-                items.forEach(i => i.remove());
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging || !currentTarget) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            currentTarget.style.left = (initialLeft + dx) + 'px';
+            currentTarget.style.top = (initialTop + dy) + 'px';
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging || !currentTarget) return;
+            
+            const dx = e.touches[0].clientX - startX;
+            const dy = e.touches[0].clientY - startY;
+            
+            currentTarget.style.left = (initialLeft + dx) + 'px';
+            currentTarget.style.top = (initialTop + dy) + 'px';
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (currentTarget) currentTarget.classList.remove('active');
+            isDragging = false;
+            currentTarget = null;
+        });
+
+        window.addEventListener('touchend', () => {
+            if (currentTarget) currentTarget.classList.remove('active');
+            isDragging = false;
+            currentTarget = null;
+        });
+
+        function addLayerItem(id, label, img) {
+            if (layers.length === 0) layerList.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 p-2 border-b border-[#111] hover:bg-ps-light cursor-pointer transition';
+            div.id = `panel-layer-${id}`;
+            div.innerHTML = `
+                <div class="w-6 h-6 bg-black border border-gray-600 bg-center bg-cover" style="background-image: url(${img})"></div>
+                <div class="flex-1 truncate">${label}</div>
+                <button onclick="removeLayer(${id})" class="text-red-500 font-bold px-1 hover:scale-125 transition">×</button>
+            `;
+            // Klik item list untuk highlight foto di kanvas
+            div.onclick = () => {
+                const el = document.getElementById(`layer-${id}`);
+                el.style.outline = '4px solid #0078d4';
+                setTimeout(() => el.style.outline = 'none', 1000);
+                printArea.appendChild(el); // Pindah ke depan
+            };
+            layerList.prepend(div);
+            layers.push(id);
+        }
+
+        function removeLayer(id) {
+            document.getElementById(`layer-${id}`)?.remove();
+            document.getElementById(`panel-layer-${id}`)?.remove();
+            layers = layers.filter(l => l !== id);
+            if (layers.length === 0) layerList.innerHTML = '<div class="text-center mt-4 italic text-gray-600">Kanvas kosong</div>';
+            updateStatus();
+        }
+
+        function clearAll() {
+            if (confirm('Hapus semua foto di kanvas?')) {
+                printArea.innerHTML = '';
+                layerList.innerHTML = '<div class="text-center mt-4 italic text-gray-600">Kanvas kosong</div>';
+                layers = [];
                 updateStatus();
-                showNotification("Kanvas Dibersihkan");
             }
         }
 
-        function updateStatus() {
-            const count = document.querySelectorAll('.photo-item').length;
-            const badge = document.getElementById('statusBadge');
-            const msg = document.getElementById('emptyMessage');
-            
-            badge.textContent = count > 0 ? `${count} FOTO` : 'KOSONG';
-            badge.className = count > 0 ? "bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" : "bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider";
-            
-            msg.style.display = count > 0 ? 'none' : 'flex';
+        function autoLayout() {
+            const photos = Array.from(printArea.querySelectorAll('.photo-layer'));
+            if (photos.length === 0) return;
+
+            let currentX = 5; // mm
+            let currentY = 5; // mm
+            let maxHeightInRow = 0;
+            const paperWidth = printArea.offsetWidth; // dalam px
+
+            // Konversi px ke mm (pendekatan kasar untuk layout)
+            const mmToPx = (mm) => mm * (paperWidth / (paperSelect.value === 'size-a3' ? 297 : 210));
+
+            photos.forEach(photo => {
+                const wMm = parseFloat(photo.style.width);
+                const hMm = parseFloat(photo.style.height);
+
+                if (currentX + wMm > (paperWidth / (paperWidth/210)) - 5) {
+                    currentX = 5;
+                    currentY += maxHeightInRow + 5;
+                    maxHeightInRow = 0;
+                }
+
+                photo.style.left = currentX + 'mm';
+                photo.style.top = currentY + 'mm';
+
+                currentX += wMm + 2;
+                if (hMm > maxHeightInRow) maxHeightInRow = hMm;
+            });
         }
 
-        function showNotification(msg) {
-            const n = document.getElementById('notification');
-            document.getElementById('notifText').textContent = msg;
-            n.classList.remove('translate-y-32');
-            setTimeout(() => n.classList.add('translate-y-32'), 2500);
+        function updateStatus() { layerCountLabel.textContent = layers.length; }
+
+        function handlePrintAction() {
+            if (layers.length === 0) return alert('Kanvas masih kosong.');
+            window.print();
         }
 
-        document.getElementById('usernameInput').addEventListener('keypress', (e) => e.key === 'Enter' && handleLogin());
+        async function downloadPDFDirect() {
+            if (layers.length === 0) return alert('Kanvas masih kosong.');
+            loadingOverlay.style.display = 'flex';
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const paperType = paperSelect.value;
+                let pW, pH;
+                if (paperType === 'size-a4') { pW = 210; pH = 297; }
+                else if (paperType === 'size-f4') { pW = 215; pH = 330; }
+                else { pW = 297; pH = 420; }
+
+                const canvas = await html2canvas(printArea, {
+                    scale: 3, 
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    width: printArea.offsetWidth,
+                    height: printArea.offsetHeight
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: [pW, pH]
+                });
+
+                pdf.addImage(imgData, 'JPEG', 0, 0, pW, pH);
+                pdf.save(`PhotoLayout_${new Date().getTime()}.pdf`);
+            } catch (error) {
+                console.error(error);
+                alert('Terjadi kesalahan saat membuat PDF.');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Jalankan update size di awal
+        updatePaperSize();
     </script>
 </body>
 </html>
