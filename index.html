@@ -140,7 +140,7 @@
                 overflow: visible !important;
                 height: auto !important;
             }
-            .no-print, header, aside, footer, #workspace-scroll-container, #canvas-wrapper {
+            .no-print, header, aside, footer, #workspace-scroll-container, #canvas-wrapper, #exit-application-overlay {
                 display: none !important;
             }
             #print-all-container {
@@ -190,6 +190,22 @@
     </style>
 </head>
 <body id="app-body" class="bg-editor-bg text-gray-200 h-screen max-h-screen flex flex-col font-sans select-none overflow-hidden relative">
+
+    <!-- OVERLAY DETEKSI KELUAR APLIKASI (Exit Screen) -->
+    <div id="exit-application-overlay" class="hidden fixed inset-0 bg-black/98 z-[110] flex flex-col items-center justify-center text-center p-6">
+        <div class="max-w-md bg-zinc-900 border border-editor-border p-8 rounded-2xl shadow-2xl space-y-6">
+            <div class="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
+                <i class="fa-solid fa-power-off text-4xl"></i>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-xl font-bold text-white tracking-wide">Aplikasi Telah Ditutup</h2>
+                <p class="text-xs text-gray-400 leading-relaxed">Anda telah keluar dari Studio Cetak Foto Pro. Seluruh memori layar penuh dan kunci otomatis telah dinonaktifkan dengan aman.</p>
+            </div>
+            <button onclick="restartApplication()" class="w-full py-3 bg-editor-active hover:bg-blue-600 text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i> Buka Kembali Aplikasi
+            </button>
+        </div>
+    </div>
 
     <!-- OVERLAY RESTORE KUNCI LAYAR PENUH (Bypass Proteksi Browser Gesture) -->
     <div id="fullscreen-restore-overlay" class="hidden fixed inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center text-center p-6">
@@ -274,8 +290,14 @@
             <button onclick="loadSampleLayout()" class="bg-indigo-700 hover:bg-indigo-600 text-white font-medium px-3 py-1.5 rounded transition flex items-center gap-1" title="Lihat Contoh Susunan Layout">
                 <i class="fa-solid fa-images"></i> Muat Demo Layout
             </button>
+            
             <button onclick="resetCanvas()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded transition flex items-center gap-1">
                 <i class="fa-solid fa-trash-can"></i> Reset Page
+            </button>
+
+            <!-- Tombol X Keluar Aplikasi (Posisinya Sebelah Reset Page) -->
+            <button onclick="exitApplication()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3.5 py-1.5 rounded transition flex items-center gap-1 shadow-md" title="Keluar dari Aplikasi Cetak">
+                <i class="fa-solid fa-xmark text-sm"></i> Keluar (X)
             </button>
         </div>
     </header>
@@ -447,7 +469,7 @@
                     </select>
                 </div>
 
-                <!-- Tombol Navigasi Tutup/Selesai -->
+                <!-- Tom Tombol Navigasi Tutup/Selesai -->
                 <div class="flex items-center space-x-1.5 border-l border-zinc-700 pl-3 shrink-0">
                     <button onclick="clearCurrentTempDrawing()" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-rose-400 rounded-lg text-[11px] transition" title="Hapus sketsa coretan saat ini">
                         Bersihkan
@@ -474,7 +496,7 @@
                         <img id="tracing-template-image" class="w-full h-full object-contain" src="">
                     </div>
 
-                    <!-- Visual Garis Batas Margin (Dashed Merah) - Tulisan Label Dihilangkan Sesuai Request -->
+                    <!-- Visual Garis Batas Margin (Dashed Merah) - Teks Label Kosong -->
                     <div id="margin-guide-box" class="absolute border border-dashed border-rose-500/60 pointer-events-none transition-all duration-300 print-hidden" style="top: 37.79px; bottom: 37.79px; left: 37.79px; right: 37.79px; z-index: 5;">
                     </div>
 
@@ -649,7 +671,7 @@
                             <i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1.5"></i> Tata Letak & Kerapian
                         </h3>
                         
-                        <!-- Pilihan Spacing Spacing Grid -->
+                        <!-- Pilihan Spacing Grid -->
                         <div>
                             <div class="flex justify-between text-xs mb-1 text-gray-400">
                                 <span>Jarak Antar Foto (Mm):</span>
@@ -1491,7 +1513,13 @@
             document.addEventListener('click', function(e) {
                 const lockBtn = document.getElementById('fullscreen-lock-btn');
                 const restoreOverlay = document.getElementById('fullscreen-restore-overlay');
+                const exitOverlay = document.getElementById('exit-application-overlay');
                 
+                // Jangan kunci fullscreen jika kita sedang menutup/keluar aplikasi
+                if (exitOverlay && !exitOverlay.classList.contains('hidden')) {
+                    return;
+                }
+
                 // Jika mode kunci aktif, dan browser mendeteksi tidak fullscreen, dan klik bukan pada tombol unlock
                 if (isFullscreenLocked && !document.fullscreenElement) {
                     if (lockBtn && !lockBtn.contains(e.target) && restoreOverlay && restoreOverlay.classList.contains('hidden')) {
@@ -1500,8 +1528,12 @@
                 }
             }, true);
 
-            // Pasang re-assertion otomatis ketika jendela kembali fokus (misal setelah dialog file tertutup)
+            // Pasang re-assertion otomatis ketika jendela kembali fokus
             window.addEventListener('focus', () => {
+                const exitOverlay = document.getElementById('exit-application-overlay');
+                if (exitOverlay && !exitOverlay.classList.contains('hidden')) {
+                    return;
+                }
                 if (isFullscreenLocked && !document.fullscreenElement) {
                     setTimeout(() => {
                         enterFullscreen();
@@ -1557,6 +1589,43 @@
             const overlay = document.getElementById('fullscreen-restore-overlay');
             if (overlay) overlay.classList.add('hidden');
             enterFullscreen();
+        }
+
+        // --- FUNGSI TOMBOL KELUAR (X) ---
+        function exitApplication() {
+            // 1. Matikan Kunci Layar Penuh Agar Tidak Memaksa Masuk Lagi
+            isFullscreenLocked = false;
+            localStorage.setItem('fullscreenLocked', 'false');
+            updateFullscreenLockUI();
+
+            // 2. Keluar Dari Mode Layar Penuh Browser Secara Instan
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+
+            // 3. Tampilkan Overlay "Aplikasi Ditutup" Secara Estetik
+            const exitOverlay = document.getElementById('exit-application-overlay');
+            if (exitOverlay) {
+                exitOverlay.classList.remove('hidden');
+            }
+            showFloatingNotification("Aplikasi FAMI-COLLECTION berhasil ditutup.");
+        }
+
+        function restartApplication() {
+            // Sembunyikan Overlay Keluar & Muat Ulang Halaman
+            const exitOverlay = document.getElementById('exit-application-overlay');
+            if (exitOverlay) {
+                exitOverlay.classList.add('hidden');
+            }
+            window.location.reload();
         }
 
         function setBrushColor(color) {
@@ -1648,7 +1717,6 @@
             const startPoint = currentDrawPoints[0];
 
             if (e.shiftKey) {
-                // Mode Garis Lurus: Snap ke Horizontal (0°), Vertikal (90°), atau Diagonal (45°)
                 let targetX = xMm;
                 let targetY = yMm;
                 const dx = xMm - startPoint.x;
@@ -1671,7 +1739,6 @@
                 currentDrawPoints.push({ x: xMm, y: yMm });
             }
 
-            // Render ulang pratinjau garis SVG secara instan
             let pathD = `M ${startPoint.x * MM_TO_PX} ${startPoint.y * MM_TO_PX}`;
             for (let i = 1; i < currentDrawPoints.length; i++) {
                 pathD += ` L ${currentDrawPoints[i].x * MM_TO_PX} ${currentDrawPoints[i].y * MM_TO_PX}`;
@@ -1780,7 +1847,6 @@
                     icon.className = "fa-solid fa-expand";
                     text.textContent = "Layar Penuh";
                     
-                    // Jika layar dikunci tapi mendadak lepas, peringatkan atau snap kembali
                     if (isFullscreenLocked) {
                         showFloatingNotification("Kunci Aktif! Klik di mana saja untuk kembali Layar Penuh.");
                     } else {
@@ -2108,7 +2174,7 @@
 
             input.onblur = savePageName;
             input.onkeydown = (evt) => {
-                if (evt.key === 'Enter') savePageName();
+                if (evt.key === 'Enter' && !evt.shiftKey) savePageName();
                 if (evt.key === 'Escape') renderPageTabs();
             };
         }
@@ -2325,7 +2391,6 @@
             updateCanvasDimensions();
         }
 
-        // --- MENGONVERSI UKURAN UNIT KUSTOM ---
         function onCustomUnitChange() {
             const unit = document.getElementById('custom-canvas-unit').value;
             let displayW = customWidthMm;
@@ -2406,7 +2471,6 @@
                 const imgUrl = e.target.result;
                 addNewImageElement(imgUrl, file.name);
 
-                // Kembalikan fullscreen agresif jika kunci diaktifkan
                 if (isFullscreenLocked && !document.fullscreenElement) {
                     setTimeout(() => {
                         enterFullscreen();
