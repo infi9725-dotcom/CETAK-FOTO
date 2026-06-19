@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio Cetak Foto Pro - Ala CorelDRAW & Photoshop</title>
+    <title>FAMI COLLECTION</title>
     
-    <!-- Favicon dengan Logo Baru -->
+    <!-- Favicon dengan Logo -->
     <link class="no-print" rel="icon" type="image/png" href="https://iili.io/CCIOBUl.png" onerror="this.onerror=null; this.href='https://iili.io/CCIOBUl.th.png';">
     
     <!-- Tailwind CSS -->
@@ -25,11 +25,11 @@
                 extend: {
                     colors: {
                         editor: {
-                            bg: '#1e1e1f',
-                            panel: '#2a2a2b',
-                            border: '#3e3e3f',
+                            bg: '#121213', 
+                            panel: '#1e1e1f',
+                            border: '#2e2e2f',
                             active: '#007acc',
-                            hover: '#3a3a3b'
+                            hover: '#2d2d2e'
                         }
                     }
                 }
@@ -42,12 +42,12 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #1e1e1f;
+            background: #121213;
         }
         ::-webkit-scrollbar-thumb {
-            background: #555556;
+            background: #444;
             border-radius: 4px;
-            border: 1px solid #2a2a2b;
+            border: 1px solid #1e1e1f;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #007acc;
@@ -110,7 +110,7 @@
 
         /* Transisi halus saat merapikan elemen otomatis */
         .smooth-transition {
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), width 0.3s ease, height 0.3s ease;
+            transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), width 0.25s ease, height 0.25s ease;
         }
 
         /* Gaya Khusus Pointer Drawing Tool */
@@ -161,17 +161,58 @@
                 height: 100vh !important;
             }
         }
+
+        /* ==========================================
+           PENGATURAN WARNA SEARASI LAYAR PENUH (HITAM PEKAT)
+           ========================================== */
+        :fullscreen, ::backdrop {
+            background-color: #000000 !important;
+        }
+        :-webkit-full-screen {
+            background-color: #000000 !important;
+        }
+        :-ms-fullscreen {
+            background-color: #000000 !important;
+        }
+        
+        /* Ketika dalam mode fullscreen, buat area workspace di belakang kanvas menjadi hitam pekat */
+        html:fullscreen #workspace-scroll-container,
+        body:fullscreen #workspace-scroll-container,
+        :fullscreen #workspace-scroll-container {
+            background-color: #000000 !important;
+            background-image: none !important;
+        }
+
+        html:fullscreen body,
+        body:fullscreen {
+            background-color: #000000 !important;
+        }
     </style>
 </head>
-<body class="bg-editor-bg text-gray-200 h-screen max-h-screen flex flex-col font-sans select-none overflow-hidden relative">
+<body id="app-body" class="bg-editor-bg text-gray-200 h-screen max-h-screen flex flex-col font-sans select-none overflow-hidden relative">
+
+    <!-- OVERLAY RESTORE KUNCI LAYAR PENUH (Bypass Proteksi Browser Gesture) -->
+    <div id="fullscreen-restore-overlay" class="hidden fixed inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center text-center p-6">
+        <div class="max-w-md bg-zinc-900 border border-editor-border p-8 rounded-2xl shadow-2xl space-y-6">
+            <div class="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto animate-pulse border border-amber-500/20">
+                <i class="fa-solid fa-lock text-4xl"></i>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-xl font-bold text-white tracking-wide">Kunci Layar Penuh Aktif</h2>
+                <p class="text-xs text-gray-400 leading-relaxed">Aplikasi diatur dalam mode Kunci Layar Penuh otomatis demi kenyamanan pengerjaan. Klik tombol di bawah untuk melanjutkan.</p>
+            </div>
+            <button onclick="activateFullscreenLocked()" class="w-full py-3 bg-editor-active hover:bg-blue-600 text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-expand"></i> Masuk Layar Penuh
+            </button>
+        </div>
+    </div>
 
     <header class="no-print bg-editor-panel border-b border-editor-border h-12 flex items-center justify-between px-4 z-40 shrink-0">
         <div class="flex items-center space-x-3">
             <div class="flex items-center gap-2">
-                <!-- Image Logo Baru dengan Fallback Cadangan -->
                 <img src="https://iili.io/CCIOBUl.png" onerror="this.onerror=null; this.src='https://iili.io/CCIOBUl.th.png';" class="h-7 w-7 object-contain rounded-md" alt="Corel Print Logo">
                 <div class="text-editor-active text-xl font-black tracking-wider flex items-center gap-2">
-                    <span>COREL-PRINT <span class="text-xs px-1.5 py-0.5 rounded bg-editor-active text-white font-medium">v2.5</span></span>
+                    <span>FAMI-COLLECTION</span>
                 </div>
             </div>
             <div class="h-6 w-px bg-editor-border"></div>
@@ -219,11 +260,14 @@
             </div>
         </div>
 
-        <div class="flex items-center space-x-3 text-xs">
-            <span class="text-gray-400 hidden lg:inline"><i class="fa-solid fa-circle-info text-blue-400"></i> Tips: Tekan <b>Ctrl+Klik</b> untuk multi-pilih & <b>Arrow Keys</b> untuk menggeser objek!</span>
-            
+        <div class="flex items-center space-x-2 text-xs">
+            <!-- Tombol Kunci Layar Penuh -->
+            <button id="fullscreen-lock-btn" onclick="toggleFullscreenLock()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-medium px-3 py-1.5 rounded transition flex items-center gap-1.5" title="Kunci Aplikasi Selalu Layar Penuh">
+                <i id="lock-icon" class="fa-solid fa-lock-open text-gray-400"></i> <span id="lock-text">Kunci Layar</span>
+            </button>
+
             <!-- Tombol Layar Penuh -->
-            <button onclick="toggleFullscreen()" class="bg-zinc-700 hover:bg-zinc-600 text-white font-medium px-3 py-1.5 rounded transition flex items-center gap-1" title="Masuk / Keluar Mode Layar Penuh">
+            <button onclick="toggleFullscreen()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-medium px-3 py-1.5 rounded transition flex items-center gap-1" title="Masuk / Keluar Mode Layar Penuh">
                 <i id="fullscreen-icon" class="fa-solid fa-expand"></i> <span id="fullscreen-text">Layar Penuh</span>
             </button>
 
@@ -249,7 +293,7 @@
                 </select>
             </div>
 
-            <!-- Input Ukuran Kustom dengan dropdown Pilihan Unit Dinamis -->
+            <!-- Input Ukuran Kustom -->
             <div id="custom-canvas-inputs" class="hidden items-center space-x-1 bg-editor-bg border border-editor-border rounded px-2 py-1 shrink-0">
                 <span class="text-[11px] text-gray-400">L:</span>
                 <input type="number" id="custom-canvas-width" value="210" min="1" max="10000" oninput="applyCustomCanvasSize()" class="w-12 bg-transparent text-white text-xs text-center outline-none focus:border-editor-active [appearance:textfield]">
@@ -284,6 +328,11 @@
                     <span class="ml-2 text-xs text-gray-300">Tampilkan Grid</span>
                 </label>
             </div>
+
+            <!-- Tombol Tambah Halaman -->
+            <button onclick="addNewPage()" class="bg-editor-active hover:bg-blue-600 text-white font-bold px-3 py-1 rounded transition flex items-center gap-1 shadow-md text-xs" title="Tambah Halaman Baru">
+                <i class="fa-solid fa-plus"></i> Tambah Halaman
+            </button>
         </div>
 
         <div class="flex items-center space-x-4 shrink-0">
@@ -299,7 +348,7 @@
     </div>
 
     <!-- Main Workspace Area -->
-    <main class="flex-1 flex overflow-hidden relative min-h-0">
+    <main class="flex-grow flex overflow-hidden relative min-h-0">
 
         <!-- Kiri: Tool Palette -->
         <aside class="no-print w-16 bg-editor-panel border-r border-editor-border flex flex-col items-center py-4 space-y-4 z-20 shrink-0">
@@ -308,9 +357,9 @@
                 <span class="text-[9px] mt-0.5">Pick</span>
             </button>
 
-            <button onclick="selectTool('draw')" id="tool-draw" class="w-11 h-11 hover:bg-editor-hover text-gray-300 rounded-lg flex flex-col items-center justify-center transition tool-btn" title="Pen Tool / Gambar Manual (P)">
-                <i class="fa-solid fa-pen-nib text-base text-cyan-400"></i>
-                <span class="text-[9px] mt-0.5">Pen Draw</span>
+            <button onclick="selectTool('draw')" id="tool-draw" class="w-11 h-11 hover:bg-editor-hover text-gray-300 rounded-lg flex flex-col items-center justify-center transition tool-btn" title="Kuas Lukis / Gambar Vektor Manual">
+                <i class="fa-solid fa-paint-brush text-base text-cyan-400"></i>
+                <span class="text-[9px] mt-0.5">Gambar</span>
             </button>
             
             <button onclick="triggerFileUpload()" id="tool-image" class="w-11 h-11 hover:bg-editor-hover text-gray-300 rounded-lg flex flex-col items-center justify-center transition tool-btn" title="Import Foto">
@@ -357,8 +406,58 @@
         </aside>
 
         <!-- Center Viewport Workspace -->
-        <section id="workspace-scroll-container" class="flex-1 min-w-0 bg-[#121213] overflow-auto p-8 flex items-start justify-center relative pb-24">
+        <section id="workspace-scroll-container" class="flex-1 min-w-0 bg-editor-bg overflow-auto p-8 flex items-start justify-center relative pb-24 transition-colors duration-300">
             
+            <!-- FLOATING DRAWING NAVIGATION BAR (Tampil Saat Mode Menggambar Aktif) -->
+            <div id="drawing-toolbar" class="hidden absolute top-4 left-1/2 -translate-x-1/2 bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 rounded-2xl px-5 py-3.5 flex items-center space-x-4 shadow-2xl z-40 transition-all duration-300 max-w-[95%]">
+                <div class="flex items-center space-x-2 text-xs font-bold text-cyan-400 border-r border-zinc-700 pr-3 shrink-0">
+                    <i class="fa-solid fa-signature text-sm animate-pulse"></i>
+                    <span>TIPS: TAHAN SHIFT = GARIS LURUS</span>
+                </div>
+                
+                <!-- Pemilih Warna Cepat & Custom -->
+                <div class="flex items-center space-x-2 shrink-0">
+                    <span class="text-[11px] text-gray-400 font-medium">Warna:</span>
+                    <input type="color" id="draw-brush-color" oninput="syncBrushColor(this.value)" class="w-6 h-6 rounded cursor-pointer border border-zinc-600 bg-transparent">
+                    <div class="flex items-center space-x-1">
+                        <button onclick="setBrushColor('#000000')" class="w-4 h-4 rounded-full bg-black border border-white/20 hover:scale-110 transition"></button>
+                        <button onclick="setBrushColor('#ff0000')" class="w-4 h-4 rounded-full bg-red-500 border border-white/20 hover:scale-110 transition"></button>
+                        <button onclick="setBrushColor('#00c853')" class="w-4 h-4 rounded-full bg-green-500 border border-white/20 hover:scale-110 transition"></button>
+                        <button onclick="setBrushColor('#007acc')" class="w-4 h-4 rounded-full bg-blue-500 border border-white/20 hover:scale-110 transition"></button>
+                        <button onclick="setBrushColor('#ffd600')" class="w-4 h-4 rounded-full bg-yellow-400 border border-white/20 hover:scale-110 transition"></button>
+                        <button onclick="setBrushColor('#ffffff')" class="w-4 h-4 rounded-full bg-white border border-zinc-400 hover:scale-110 transition"></button>
+                    </div>
+                </div>
+
+                <!-- Slider Ukuran Brush -->
+                <div class="flex items-center space-x-2 border-l border-zinc-700 pl-3 shrink-0">
+                    <span class="text-[11px] text-gray-400 font-medium">Ketebalan:</span>
+                    <input type="range" id="draw-brush-size" min="1" max="30" value="4" oninput="updateBrushSizeLabel(this.value)" class="w-20 md:w-28 accent-cyan-400 h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
+                    <span id="draw-brush-size-text" class="text-xs font-bold text-white w-8">4 px</span>
+                </div>
+
+                <!-- Pilihan Tipe Pena / Gaya Goresan -->
+                <div class="flex items-center space-x-2 border-l border-zinc-700 pl-3 shrink-0">
+                    <span class="text-[11px] text-gray-400 font-medium">Gaya:</span>
+                    <select id="draw-brush-style" onchange="updateBrushStyle(this.value)" class="bg-zinc-800 border border-zinc-700 text-white text-xs px-2 py-1 rounded outline-none focus:border-cyan-400">
+                        <option value="solid">Pena Solid</option>
+                        <option value="calligraphy">Kuas Kaligrafi</option>
+                        <option value="dashed">Garis Putus-putus</option>
+                        <option value="highlighter">Stabilo Transparan</option>
+                    </select>
+                </div>
+
+                <!-- Tombol Navigasi Tutup/Selesai -->
+                <div class="flex items-center space-x-1.5 border-l border-zinc-700 pl-3 shrink-0">
+                    <button onclick="clearCurrentTempDrawing()" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-rose-400 rounded-lg text-[11px] transition" title="Hapus sketsa coretan saat ini">
+                        Bersihkan
+                    </button>
+                    <button onclick="selectTool('move')" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-[11px] transition shadow flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> Selesai
+                    </button>
+                </div>
+            </div>
+
             <!-- Ruler Sudut Kertas Cetak -->
             <div class="absolute top-0 left-0 bg-editor-panel text-[10px] text-gray-500 font-mono px-1 border-r border-b border-editor-border z-10 select-none print-hidden no-print">
                 mm
@@ -375,19 +474,18 @@
                         <img id="tracing-template-image" class="w-full h-full object-contain" src="">
                     </div>
 
-                    <!-- Visual Garis Batas Margin (Dashed Merah) -->
+                    <!-- Visual Garis Batas Margin (Dashed Merah) - Tulisan Label Dihilangkan Sesuai Request -->
                     <div id="margin-guide-box" class="absolute border border-dashed border-rose-500/60 pointer-events-none transition-all duration-300 print-hidden" style="top: 37.79px; bottom: 37.79px; left: 37.79px; right: 37.79px; z-index: 5;">
-                        <span class="absolute -top-4 left-0 text-[9px] text-rose-500/80 font-semibold tracking-wider uppercase">Batas Margin Aman Cetak</span>
                     </div>
 
                     <!-- OVERLAY LIVE VECTOR DRAWING PREVIEW -->
                     <svg id="draw-preview-svg" class="absolute inset-0 w-full h-full pointer-events-none z-30 hidden" style="width: 100%; height: 100%;">
-                        <path id="draw-preview-path" fill="rgba(0, 122, 204, 0.15)" stroke="#007acc" stroke-width="2" stroke-dasharray="4, 4" d=""></path>
+                        <path id="draw-preview-path" fill="none" stroke="#007acc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d=""></path>
                     </svg>
 
                     <!-- Area Meletakan Elemen Desain -->
                     <div id="canvas-items-container" class="absolute inset-0 w-full h-full">
-                        <!-- Elemen-elemen visual foto dan kartu akan digenerate ke sini -->
+                        <!-- Elemen-elemen visual diletakkan di sini -->
                     </div>
                 </div>
 
@@ -425,7 +523,7 @@
             
             <!-- Dynamic Page Tabs Container -->
             <div id="pages-container" class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none py-1 max-w-[240px] md:max-w-[480px]">
-                <!-- Tabs will be dynamically injected here -->
+                <!-- Tabs akan dimasukkan lewat js -->
             </div>
 
             <button onclick="nextPage()" class="w-8 h-8 text-gray-400 hover:text-white hover:bg-editor-hover rounded-full flex items-center justify-center transition" title="Halaman Berikutnya">
@@ -433,9 +531,6 @@
             </button>
             <div class="h-5 w-px bg-editor-border"></div>
             
-            <button onclick="addNewPage()" class="w-8 h-8 bg-editor-active hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition shadow" title="Tambah Halaman Baru">
-                <i class="fa-solid fa-plus text-xs"></i>
-            </button>
             <button onclick="deleteCurrentPage()" class="w-8 h-8 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-full flex items-center justify-center transition" title="Hapus Halaman Aktif">
                 <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
@@ -450,7 +545,7 @@
                     <i class="fa-solid fa-images mr-1"></i> Ukuran
                 </button>
                 <button onclick="switchTab('shapes')" id="tab-btn-shapes" class="flex-1 py-3 text-center text-[11px] font-semibold uppercase border-b-2 border-transparent text-gray-400 hover:text-white transition" title="Bentuk & Logo">
-                    <i class="fa-solid fa-shapes mr-1"></i> Shapes & Trace
+                    <i class="fa-solid fa-shapes mr-1"></i> Shapes
                 </button>
                 <button onclick="switchTab('properties')" id="tab-btn-properties" class="flex-1 py-3 text-center text-[11px] font-semibold uppercase border-b-2 border-transparent text-gray-400 hover:text-white transition" title="Properti Elemen">
                     <i class="fa-solid fa-sliders mr-1"></i> Properties
@@ -541,7 +636,7 @@
                                 <span class="block text-sm font-bold text-white">8R <span class="text-[10px] font-normal text-gray-400 ml-1">8"x10"</span></span>
                                 <span class="text-[10px] text-gray-400">203.2 x 254 mm</span>
                             </button>
-                            <button onclick="applyPresetToSelectedOrNew(254, 304.8, 'Foto 10R')" class="bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover px-2 py-2 rounded text-left transition">
+                            <button onclick="applyPresetToSelectedOrNew(254, 304.8, 'Foto 10R')" class="bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover px-2 py-2 rounded text-left transition col-span-1">
                                 <span class="block text-sm font-bold text-white">10R <span class="text-[10px] font-normal text-gray-400 ml-1">10"x12"</span></span>
                                 <span class="text-[10px] text-gray-400">254 x 304.8 mm</span>
                             </button>
@@ -579,10 +674,10 @@
 
                 </div>
 
-                <!-- CONTAINER TAB 2: GALERI SHAPES (BENTUK, LOGO & TRACING GUIDE) -->
+                <!-- CONTAINER TAB 2: GALERI SHAPES -->
                 <div id="tab-content-shapes" class="p-4 space-y-5 hidden pb-12">
                     
-                    <!-- FITUR TRACING GUIDE (JIPLAK GAMBAR/LOGO) -->
+                    <!-- FITUR TRACING GUIDE -->
                     <div class="bg-editor-bg/60 border border-editor-border/80 p-3 rounded-lg space-y-3">
                         <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-images"></i> Tracing Template (Penjiplak)
@@ -620,11 +715,11 @@
                     <!-- FITUR MANUAL DRAWING CONTROLLER -->
                     <div class="bg-editor-bg/60 border border-indigo-900/60 p-3 rounded-lg space-y-2">
                         <h4 class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-pen-nib"></i> Menggambar Vektor Manual
+                            <i class="fa-solid fa-paint-brush"></i> Gambar Bebas / Lukisan Kuas
                         </h4>
-                        <p class="text-[10px] text-gray-400 leading-relaxed">Klik tombol di bawah ini atau ikon Pena di kiri, lalu klik di kanvas untuk mulai menyambung titik logo baru Anda secara bebas.</p>
+                        <p class="text-[10px] text-gray-400 leading-relaxed">Tarik mouse atau pen tablet untuk menggambar langsung secara presisi.</p>
                         <button onclick="selectTool('draw')" class="w-full bg-cyan-800 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded-lg transition flex items-center justify-center gap-2 shadow">
-                            <i class="fa-solid fa-draw-polygon"></i> Mulai Gambar Manual
+                            <i class="fa-solid fa-signature"></i> Aktifkan Mode Menggambar
                         </button>
                     </div>
 
@@ -716,7 +811,7 @@
                     </div>
 
                     <!-- SIMBOL & ESTETIKA DESAIN -->
-                    <div>
+                    <div class="space-y-2">
                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-editor-border/50 pb-1 flex items-center gap-1.5">
                             <i class="fa-solid fa-shapes text-rose-400"></i> Simbol & Estetika
                         </h4>
@@ -739,55 +834,6 @@
                             <button onclick="addShapeElement('leaf', 'Daun Estetik')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Daun Estetik">
                                 <div class="w-8 h-8 pointer-events-none fill-current">
                                     <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M88,12 C88,12 56,18 38,42 C24,60 16,80 6,94 C20,84 42,76 60,62 C84,44 88,12 88,12 Z" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('cloud', 'Awan')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Awan">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M32,76 C17,76 6,64 6,48 C6,34 16,23 29,22 C34,10 46,2 62,2 C77,2 90,13 94,28 C97,29 100,35 100,42 C100,58 87,76 68,76 Z" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('crown', 'Mahkota')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Mahkota">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="15,85 85,85 90,38 66,58 50,20 34,58 10,38" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('bubble', 'Balon Kata')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Balon Kata">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M10,15 L90,15 L90,65 L35,65 L10,85 L20,65 L10,65 Z" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('infinity', 'Infinity')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Infinity">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M30,30 C19,30 10,39 10,50 C10,61 19,70 30,70 C38,70 45,63 50,56 C55,63 62,70 70,70 C81,70 90,61 90,50 C90,39 81,30 70,30 C62,30 55,37 50,44 C45,37 38,30 30,30 Z M30,42 C34.4,42 38,45.6 38,50 C38,54.4 34.4,58 30,58 C25.6,58 22,54.4 22,50 C22,45.6 25.6,42 30,42 Z M70,42 C74.4,42 78,45.6 78,50 C78,54.4 74.4,58 70,58 C65.6,58 62,54.4 62,50 C62,45.6 65.6,42 70,42 Z" fill-rule="evenodd" /></svg>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- POLIGON LAINNYA -->
-                    <div>
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-editor-border/50 pb-1 flex items-center gap-1.5">
-                            <i class="fa-solid fa-shapes text-indigo-400"></i> Poligon Lainnya
-                        </h4>
-                        <div class="grid grid-cols-4 gap-2">
-                            <button onclick="addShapeElement('hexagon', 'Segi Enam')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Segi Enam">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="50,10 88,32 88,68 50,90 12,68 12,32" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('octagon', 'Segi Delapan')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Segi Delapan">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="32,10 68,10 90,32 90,68 68,90 32,90 10,68 10,32" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('cross', 'Palang Tambah')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Palang Tambah">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="38,10 62,10 62,38 90,38 90,62 62,62 62,90 38,90 38,62 10,62 10,38 38,38" /></svg>
-                                </div>
-                            </button>
-                            <button onclick="addShapeElement('banner', 'Pita Banner')" class="aspect-square bg-editor-bg border border-editor-border hover:border-cyan-500 rounded p-2 flex items-center justify-center transition text-cyan-400 hover:text-white" title="Pita Banner">
-                                <div class="w-8 h-8 pointer-events-none fill-current">
-                                    <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="5,25 95,25 85,50 95,75 5,75 15,50" /></svg>
                                 </div>
                             </button>
                         </div>
@@ -814,7 +860,7 @@
                             </div>
                         </div>
 
-                        <!-- PANEL EDIT GAMBAR KHUSUS (CROP & RESET) -->
+                        <!-- PANEL EDIT GAMBAR KHUSUS -->
                         <div id="image-action-controls" class="hidden border-t border-editor-border pt-4 space-y-2">
                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                                 <i class="fa-solid fa-image text-emerald-400 mr-1.5"></i> Kustomisasi Gambar
@@ -926,7 +972,6 @@
                                 </div>
                             </div>
 
-                            <!-- Tombol Toggle Style Bold / Italic -->
                             <div class="grid grid-cols-2 gap-2">
                                 <button id="btn-toggle-bold" onclick="toggleTextWeight()" class="py-1 bg-editor-bg border border-editor-border hover:bg-editor-hover rounded text-xs flex items-center justify-center gap-1 transition">
                                     <i class="fa-solid fa-bold"></i> Tebal
@@ -950,7 +995,7 @@
                                 </div>
                             </div>
 
-                            <!-- OUTLINE (GARIS TEPI TEKS) -->
+                            <!-- OUTLINE -->
                             <div class="border-t border-editor-border/40 pt-3 space-y-2">
                                 <span class="text-xs text-gray-400 font-bold block"><i class="fa-solid fa-border-style text-cyan-400 mr-1"></i> Garis Tepi (Stroke Outline)</span>
                                 <div class="grid grid-cols-2 gap-2">
@@ -965,9 +1010,9 @@
                                 </div>
                             </div>
 
-                            <!-- EFEK BAYANGAN / NEON GLOW -->
-                            <div class="border-t border-editor-border/40 pt-3">
-                                <label class="block text-xs text-gray-400 mb-1"><i class="fa-solid fa-wand-magic-sparkles text-rose-400 mr-1"></i> Preset Efek Bayangan / Cahaya:</label>
+                            <!-- BAYANGAN -->
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1"><i class="fa-solid fa-wand-magic-sparkles text-rose-400 mr-1"></i> Preset Efek Bayangan:</label>
                                 <select id="prop-text-shadow" onchange="updateTextShadow()" class="w-full bg-editor-bg border border-editor-border text-white text-xs px-2 py-1.5 rounded outline-none focus:border-editor-active">
                                     <option value="none">Tanpa Efek (Standard)</option>
                                     <option value="shadow">Bayangan Lembut (Drop Shadow)</option>
@@ -977,7 +1022,7 @@
                                 </select>
                             </div>
 
-                            <!-- GRADATION COLOR FILL -->
+                            <!-- GRADASI WARNA TEKS -->
                             <div class="border-t border-editor-border/40 pt-3 space-y-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs text-gray-400 font-bold"><i class="fa-solid fa-palette text-amber-400 mr-1"></i> Gradasi Warna Teks</span>
@@ -989,7 +1034,7 @@
                                         <input type="color" id="prop-text-color-grad" oninput="updateTextColor()" class="w-full h-8 bg-editor-bg border border-editor-border rounded cursor-pointer" value="#ff0000">
                                     </div>
                                     <div>
-                                        <label class="block text-[10px] text-gray-400 mb-1">Arah Sudut Grad:</label>
+                                        <label class="block text-[10px] text-gray-400 mb-1">Arah Sudut:</label>
                                         <select id="prop-text-grad-angle" onchange="updateTextColor()" class="w-full bg-editor-bg border border-editor-border text-white text-xs px-2 py-1.5 rounded outline-none">
                                             <option value="to bottom">Ke Bawah</option>
                                             <option value="to right">Ke Kanan</option>
@@ -1057,7 +1102,7 @@
                             </div>
                         </div>
 
-                        <!-- Pengaturan Layering & Susunan (Order) -->
+                        <!-- Pengaturan Layering -->
                         <div class="border-t border-editor-border pt-4">
                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5">
                                 <i class="fa-solid fa-layer-group mr-1"></i> Susunan Layer
@@ -1093,7 +1138,7 @@
                 </button>
             </div>
             <div class="p-5 space-y-4">
-                <p class="text-xs text-gray-400 leading-relaxed">Atur batas margin pengaman kertas agar seluruh foto tertata dengan rapi and tidak terpotong oleh sistem pencetakan fisik printer Anda.</p>
+                <p class="text-xs text-gray-400 leading-relaxed">Atur batas margin pengaman kertas agar seluruh foto tertata dengan rapi dan tidak terpotong oleh sistem pencetakan fisik printer Anda.</p>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Margin Atas (Top):</label>
@@ -1136,10 +1181,9 @@
         </div>
     </div>
 
-    <!-- MODAL CROP (PEMOTONG FOTO) KELAS PROFESIONAL -->
+    <!-- MODAL CROP -->
     <div id="crop-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-editor-panel border border-editor-border max-w-2xl w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <!-- Header -->
             <div class="px-5 py-4 border-b border-editor-border flex justify-between items-center bg-black/20">
                 <h3 class="font-bold text-sm text-white flex items-center gap-2">
                     <i class="fa-solid fa-crop text-emerald-400"></i> Pemotong & Penyesuai Foto (Crop Tool)
@@ -1148,18 +1192,13 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <!-- Interactive Crop Workspace -->
             <div class="p-6 flex-1 flex flex-col items-center justify-center overflow-auto bg-zinc-950 relative min-h-[300px]">
                 <div id="crop-workspace-container" class="relative select-none max-w-full max-h-[50vh] overflow-hidden rounded shadow-xl">
                     <img id="crop-target-img" class="max-w-full max-h-[50vh] pointer-events-none select-none" src="">
-                    <!-- Area Seleksi Crop dengan Shading -->
                     <div id="crop-box" class="absolute border-2 border-editor-active cursor-move" style="top: 10%; left: 10%; width: 80%; height: 80%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);">
-                        
-                        <!-- Garis Grid Komposisi Fotografi Rule of Thirds -->
                         <div class="absolute inset-y-0 left-1/3 right-1/3 border-x border-dashed border-white/30 pointer-events-none"></div>
                         <div class="absolute inset-x-0 top-1/3 bottom-1/3 border-y border-dashed border-white/30 pointer-events-none"></div>
                         
-                        <!-- 4 Corner Touch Handles -->
                         <div class="crop-handle absolute w-3.5 h-3.5 bg-editor-active border border-white rounded-full -top-1.5 -left-1.5 cursor-nwse-resize z-50" data-handle="tl"></div>
                         <div class="crop-handle absolute w-3.5 h-3.5 bg-editor-active border border-white rounded-full -top-1.5 -right-1.5 cursor-nesw-resize z-50" data-handle="tr"></div>
                         <div class="crop-handle absolute w-3.5 h-3.5 bg-editor-active border border-white rounded-full -bottom-1.5 -left-1.5 cursor-nesw-resize z-50" data-handle="bl"></div>
@@ -1167,9 +1206,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Footer Controls -->
             <div class="px-5 py-4 bg-black/20 border-t border-editor-border flex flex-col sm:flex-row justify-between items-center gap-4">
-                <!-- Preset Aspect Ratio -->
                 <div class="flex items-center space-x-2">
                     <span class="text-xs text-gray-400">Rasio Potongan:</span>
                     <select id="crop-aspect-select" onchange="setCropAspect()" class="bg-editor-bg border border-editor-border text-white text-xs px-2.5 py-1.5 rounded outline-none focus:border-editor-active">
@@ -1181,7 +1218,6 @@
                         <option value="16:9">16 : 9 (Widescreen)</option>
                     </select>
                 </div>
-                <!-- Action Buttons -->
                 <div class="flex gap-2">
                     <button onclick="resetCropToOriginal()" class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-editor-border rounded-lg text-xs text-amber-400 font-medium transition flex items-center gap-1">
                         <i class="fa-solid fa-arrows-to-eye"></i> Penuh
@@ -1195,7 +1231,7 @@
         </div>
     </div>
 
-    <!-- Footer status bar info -->
+    <!-- Status Bar -->
     <footer class="no-print bg-editor-panel border-t border-editor-border h-8 flex items-center justify-between px-4 text-[11px] text-gray-400 z-40 shrink-0">
         <div class="flex items-center space-x-4">
             <span id="footer-status-mouse">Posisi Mouse: X: 0 mm, Y: 0 mm</span>
@@ -1211,17 +1247,16 @@
         </div>
     </footer>
 
-    <!-- Hidden File Input Dialog -->
+    <!-- Hidden Input Dialogs -->
     <input type="file" id="image-file-uploader" accept="image/*" class="hidden" onchange="handleImageUploaded(event)">
     <input type="file" id="tracing-file-uploader" accept="image/*" class="hidden" onchange="handleTracingUploaded(event)">
 
-    <!-- JS Logic Corel Studio -->
+    <!-- Core App Logic -->
     <script>
-        // --- KONSTANTA & KONVERSI DIMENSI ---
+        // --- KONSTANTA & DIMENSI ---
         const MM_TO_PX = 3.779527559;
         const PX_TO_MM = 1 / MM_TO_PX;
 
-        // --- DEKLARASI VARIABEL KANVAS ---
         const CANVAS_PRESETS = {
             'A4': { widthMm: 210, heightMm: 297, label: 'A4 (210 x 297 mm)' },
             'F4': { widthMm: 215, heightMm: 330, label: 'F4 / Folio (215 x 330 mm)' },
@@ -1234,18 +1269,15 @@
         let currentOrientation = 'portrait';
         let canvasZoom = 0.75;
         
-        // SELEKSI ENGINE (Mendukung Multi-Seleksi & Grouping)
         let selectedElementId = null; 
-        let selectedElementIds = []; // Daftar ID elemen terpilih bersamaan (Ctrl + Klik)
+        let selectedElementIds = []; 
 
-        // --- STATE ENGINE MULTI-KANVAS/HALAMAN ---
         let pagesList = [
             { id: 'page-1', name: 'Halaman 1', elements: [] }
         ];
         let activePageIndex = 0;
         let pageCounter = 1;
 
-        // elementsList adalah referensi instan ke elemen halaman aktif saat ini
         let elementsList = pagesList[activePageIndex].elements;
         let elementCounter = 0;
 
@@ -1255,7 +1287,6 @@
         let marginRightMm = 10;
         let showMarginGuides = true;
 
-        // Kontrol Transformasi Utama
         let isDragging = false;
         let isResizing = false;
         let isRotating = false;
@@ -1270,11 +1301,10 @@
         let dragStartAngle = 0;
         let dragStartRatio = 1;
 
-        // Kontrol Pemotong Foto (Cropper Modal)
         let isCropperDragging = false;
         let isCropperResizing = false;
         let activeCropHandle = null;
-        let cropAspectRatio = 'free'; // free, 1:1, 3:4, etc.
+        let cropAspectRatio = 'free';
         let cropStartMouseX = 0;
         let cropStartMouseY = 0;
         let cropStartBoxX = 0;
@@ -1282,12 +1312,21 @@
         let cropStartBoxW = 0;
         let cropStartBoxH = 0;
 
-        // SISTEM LIVE DRAWING (MANUAL LOGO PEN TOOL)
-        let currentTool = 'move'; // 'move', 'draw', 'shapes'
+        let currentTool = 'move'; 
         let isDrawingMode = false;
-        let currentDrawPoints = [];
+        let currentDrawPoints = []; 
 
-        // Initializer Aplikasi
+        let activeBrushColor = '#007acc';
+        let activeBrushSize = 4;
+        let activeBrushStyle = 'solid';
+
+        // Koordinat tracking kursor terakhir untuk memicu respons Shift Key instan
+        let lastMouseClientX = 0;
+        let lastMouseClientY = 0;
+
+        // --- MANAJEMEN LOCK FULLSCREEN PERSISTEN ---
+        let isFullscreenLocked = localStorage.getItem('fullscreenLocked') === 'true';
+
         window.onload = function() {
             initApp();
         };
@@ -1296,20 +1335,20 @@
             updateCanvasDimensions();
             updateMarginGuides();
             
-            // Pointer Handlers untuk seluruh workspace
             document.addEventListener('pointermove', function(e) {
                 onPointerMove(e);
                 onCropperPointerMove(e);
+                handleFreehandDrawMove(e);
             });
             document.addEventListener('pointerup', function(e) {
                 onPointerUp(e);
                 onCropperPointerUp(e);
+                handleFreehandDrawEnd(e);
             });
 
             const canvasEl = document.getElementById('canvas');
             canvasEl.addEventListener('pointermove', updateMouseCoordsStatus);
 
-            // Double Click pada background Canvas untuk membuat teks instan secara cepat
             canvasEl.addEventListener('dblclick', function(e) {
                 if (currentTool === 'draw') return; 
                 if (e.target.id === 'canvas' || e.target.id === 'canvas-items-container' || e.target.classList.contains('canvas-grid')) {
@@ -1318,52 +1357,55 @@
                     const yPx = e.clientY - rect.top;
                     const xMm = xPx / canvasZoom * PX_TO_MM;
                     const yMm = yPx / canvasZoom * PX_TO_MM;
-
                     createNewTextElementAt(xMm - 20, yMm - 5);
                 }
             });
 
-            // Klik Kiri Handler untuk Gambar Vektor Manual & Deselect
-            canvasEl.addEventListener('click', function(e) {
+            canvasEl.addEventListener('pointerdown', function(e) {
                 if (currentTool === 'draw') {
-                    const rect = canvasEl.getBoundingClientRect();
-                    const xPx = e.clientX - rect.left;
-                    const yPx = e.clientY - rect.top;
-                    const xMm = xPx / canvasZoom * PX_TO_MM;
-                    const yMm = yPx / canvasZoom * PX_TO_MM;
-
-                    currentDrawPoints.push({ x: xMm, y: yMm });
-                    updateDrawPreview();
-                    return;
-                }
-
-                // Deselect jika klik pada area kosong kanvas tanpa menekan Ctrl
-                if (e.target.id === 'canvas' || e.target.id === 'canvas-items-container' || e.target.classList.contains('canvas-grid')) {
-                    if (!e.ctrlKey && !e.metaKey) {
-                        selectElement(null);
-                    }
-                }
-            });
-
-            // Klik Rata / Double Click untuk Menutup Jalur Vektor
-            canvasEl.addEventListener('dblclick', function(e) {
-                if (currentTool !== 'draw') return;
-                e.stopPropagation();
-                e.preventDefault();
-                
-                if (currentDrawPoints.length >= 3) {
-                    finishManualDrawing();
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleFreehandDrawStart(e);
                 } else {
-                    showFloatingNotification("Minimal buat 3 titik sudut untuk membentuk logo.");
+                    if (e.target.id === 'canvas' || e.target.id === 'canvas-items-container' || e.target.classList.contains('canvas-grid')) {
+                        if (!e.ctrlKey && !e.metaKey) {
+                            selectElement(null);
+                        }
+                    }
                 }
             });
 
             resetCanvas(true);
             renderPageTabs();
             
-            // KEYBOARD CONTROLLER (Delete, Escape, Enter, & Arrow Key Nudging)
+            // Integrasi Event Keydown & Keyup
             document.addEventListener('keydown', function(e) {
-                // Jangan jalankan pergeseran / penghapusan jika user sedang berinteraksi di elemen teks/input
+                // Shortcut Keyboard CTRL + C / CMD + C untuk Duplikasi instan
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+                    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') {
+                        return; 
+                    }
+                    e.preventDefault();
+                    if (selectedElementIds.length > 0) {
+                        duplicateSelected();
+                        showFloatingNotification("Objek disalin & diduplikasi!");
+                    } else {
+                        showFloatingNotification("Pilih objek terlebih dahulu untuk disalin.");
+                    }
+                    return;
+                }
+
+                // Respons tombol Shift Instan pada pratinjau menggambar
+                if (e.key === 'Shift' && isDrawingMode) {
+                    const fakeEvent = {
+                        clientX: lastMouseClientX,
+                        clientY: lastMouseClientY,
+                        shiftKey: true
+                    };
+                    handleFreehandDrawMove(fakeEvent);
+                    return;
+                }
+
                 if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') {
                     return; 
                 }
@@ -1371,21 +1413,10 @@
                 if (e.key === "Delete" || e.key === "Backspace") {
                     deleteSelected();
                 }
-                if (e.key === "Enter" && currentTool === 'draw') {
-                    if (currentDrawPoints.length >= 3) {
-                        finishManualDrawing();
-                    }
-                }
-                if (e.key === "Escape" && currentTool === 'draw') {
-                    cancelManualDrawing();
-                }
 
-                // FITUR KEYBOARD NUDGING (Gunting & Geser Objek dengan Tombol Panah Kiri, Kanan, Atas, Bawah)
                 if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
                     if (selectedElementIds.length > 0) {
-                        e.preventDefault(); // Mencegah workspace bergulir/scrolling bawaan browser
-                        
-                        // Default pergeseran presisi cetak 1mm. Jika menekan Shift, lompat geser cepat 10mm.
+                        e.preventDefault();
                         const nudgeDistance = e.shiftKey ? 10 : 1; 
 
                         selectedElementIds.forEach(id => {
@@ -1393,8 +1424,6 @@
                             if (!item) return;
 
                             const elDom = document.getElementById(id);
-                            
-                            // Ambil koordinat saat ini
                             let posX = item.xMm;
                             let posY = item.yMm;
 
@@ -1407,34 +1436,38 @@
                             item.yMm = posY;
 
                             if (elDom) {
-                                // Nonaktifkan transisi sementara agar pergerakan keyboard terasa instan dan lengket (zero lag)
                                 elDom.classList.remove('smooth-transition');
-
-                                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+                                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                                     renderElementOnCanvas(item);
                                 } else {
                                     updateElementDOMTransform(elDom, item);
                                 }
-
-                                // Kembalikan transisi animasi halus setelah rendering posisi baru selesai
                                 requestAnimationFrame(() => {
                                     elDom.classList.add('smooth-transition');
                                 });
                             }
                         });
 
-                        // Sinkronkan panel properti yang sedang terbuka jika hanya 1 elemen yang terpilih
                         if (selectedElementId && selectedElementIds.length === 1) {
                             const activeItem = elementsList.find(el => el.id === selectedElementId);
                             if (activeItem) fillPropertyInputs(activeItem);
                         }
-
                         syncActivePage();
                     }
                 }
             });
 
-            // Close download dropdown when clicking outside
+            document.addEventListener('keyup', function(e) {
+                if (e.key === 'Shift' && isDrawingMode) {
+                    const fakeEvent = {
+                        clientX: lastMouseClientX,
+                        clientY: lastMouseClientY,
+                        shiftKey: false
+                    };
+                    handleFreehandDrawMove(fakeEvent);
+                }
+            });
+
             document.addEventListener('click', function(e) {
                 const dropdownContainer = document.getElementById('download-dropdown-container');
                 const dropdown = document.getElementById('download-dropdown');
@@ -1443,29 +1476,279 @@
                 }
             });
 
-            // Daftarkan listener perubahan status fullscreen
             document.addEventListener('fullscreenchange', handleFullscreenChange);
             document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+            // Inisialisasi status kunci layar penuh
+            updateFullscreenLockUI();
+            if (isFullscreenLocked) {
+                // Tampilkan overlay pemicu interaksi pengguna untuk meloloskan aturan browser
+                const overlay = document.getElementById('fullscreen-restore-overlay');
+                if (overlay) overlay.classList.remove('hidden');
+            }
+
+            // Sistem pertahanan Fullscreen Lock via Pointer/Action Capture
+            document.addEventListener('click', function(e) {
+                const lockBtn = document.getElementById('fullscreen-lock-btn');
+                const restoreOverlay = document.getElementById('fullscreen-restore-overlay');
+                
+                // Jika mode kunci aktif, dan browser mendeteksi tidak fullscreen, dan klik bukan pada tombol unlock
+                if (isFullscreenLocked && !document.fullscreenElement) {
+                    if (lockBtn && !lockBtn.contains(e.target) && restoreOverlay && restoreOverlay.classList.contains('hidden')) {
+                        enterFullscreen();
+                    }
+                }
+            }, true);
+
+            // Pasang re-assertion otomatis ketika jendela kembali fokus (misal setelah dialog file tertutup)
+            window.addEventListener('focus', () => {
+                if (isFullscreenLocked && !document.fullscreenElement) {
+                    setTimeout(() => {
+                        enterFullscreen();
+                    }, 300);
+                }
+            });
         }
 
-        // --- SISTEM LAYAR PENUH (FULLSCREEN ENGINE) ---
+        // --- STRATEGI FORCE FULLSCREEN ---
+        function enterFullscreen() {
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(err => console.log("Izin Layar Penuh ditangguhkan browser:", err));
+            } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen().catch(err => console.log("Izin Layar Penuh ditangguhkan browser:", err));
+            } else if (docEl.msRequestFullscreen) {
+                docEl.msRequestFullscreen();
+            }
+        }
+
+        function toggleFullscreenLock() {
+            isFullscreenLocked = !isFullscreenLocked;
+            localStorage.setItem('fullscreenLocked', isFullscreenLocked);
+            updateFullscreenLockUI();
+
+            if (isFullscreenLocked) {
+                enterFullscreen();
+                showFloatingNotification("Sistem Kunci Layar Penuh Diaktifkan secara Persisten!");
+            } else {
+                showFloatingNotification("Sistem Kunci Layar Penuh Dinonaktifkan.");
+            }
+        }
+
+        function updateFullscreenLockUI() {
+            const btn = document.getElementById('fullscreen-lock-btn');
+            const icon = document.getElementById('lock-icon');
+            const text = document.getElementById('lock-text');
+
+            if (!btn || !icon || !text) return;
+
+            if (isFullscreenLocked) {
+                btn.className = "bg-amber-950 border border-amber-800 text-amber-300 font-bold px-3 py-1.5 rounded transition flex items-center gap-1.5 shadow-md";
+                icon.className = "fa-solid fa-lock text-amber-400 animate-pulse";
+                text.textContent = "Layar Terkunci";
+            } else {
+                btn.className = "bg-zinc-800 hover:bg-zinc-700 text-white font-medium px-3 py-1.5 rounded transition flex items-center gap-1.5";
+                icon.className = "fa-solid fa-lock-open text-gray-400";
+                text.textContent = "Kunci Layar";
+            }
+        }
+
+        function activateFullscreenLocked() {
+            const overlay = document.getElementById('fullscreen-restore-overlay');
+            if (overlay) overlay.classList.add('hidden');
+            enterFullscreen();
+        }
+
+        function setBrushColor(color) {
+            activeBrushColor = color;
+            document.getElementById('draw-brush-color').value = color;
+            updateDrawPreviewStyle();
+        }
+
+        function syncBrushColor(color) {
+            activeBrushColor = color;
+            updateDrawPreviewStyle();
+        }
+
+        function updateBrushSizeLabel(val) {
+            activeBrushSize = parseInt(val) || 1;
+            document.getElementById('draw-brush-size-text').textContent = `${activeBrushSize} px`;
+            updateDrawPreviewStyle();
+        }
+
+        function updateBrushStyle(style) {
+            activeBrushStyle = style;
+            updateDrawPreviewStyle();
+        }
+
+        function updateDrawPreviewStyle() {
+            const previewPath = document.getElementById('draw-preview-path');
+            if (!previewPath) return;
+
+            previewPath.setAttribute('stroke', activeBrushColor);
+            previewPath.setAttribute('stroke-width', activeBrushSize);
+
+            if (activeBrushStyle === 'dashed') {
+                previewPath.setAttribute('stroke-dasharray', '8,8');
+            } else {
+                previewPath.removeAttribute('stroke-dasharray');
+            }
+
+            if (activeBrushStyle === 'highlighter') {
+                previewPath.setAttribute('opacity', '0.4');
+            } else {
+                previewPath.setAttribute('opacity', '1.0');
+            }
+        }
+
+        function handleFreehandDrawStart(e) {
+            isDrawingMode = true;
+            currentDrawPoints = [];
+
+            lastMouseClientX = e.clientX;
+            lastMouseClientY = e.clientY;
+
+            const canvasEl = document.getElementById('canvas');
+            const rect = canvasEl.getBoundingClientRect();
+            const xPx = e.clientX - rect.left;
+            const yPx = e.clientY - rect.top;
+            
+            const xMm = (xPx / canvasZoom) * PX_TO_MM;
+            const yMm = (yPx / canvasZoom) * PX_TO_MM;
+
+            currentDrawPoints.push({ x: xMm, y: yMm });
+
+            const previewSvg = document.getElementById('draw-preview-svg');
+            const previewPath = document.getElementById('draw-preview-path');
+            
+            previewSvg.classList.remove('hidden');
+            updateDrawPreviewStyle();
+
+            const startXPx = xMm * MM_TO_PX;
+            const startYPx = yMm * MM_TO_PX;
+            previewPath.setAttribute('d', `M ${startXPx} ${startYPx}`);
+        }
+
+        // --- SISTEM PENGGAMBARAN VEKTOR BEBAS & GARIS LURUS (SHIFT KEY SNAPPING) ---
+        function handleFreehandDrawMove(e) {
+            if (!isDrawingMode) return;
+
+            lastMouseClientX = e.clientX;
+            lastMouseClientY = e.clientY;
+
+            const canvasEl = document.getElementById('canvas');
+            const rect = canvasEl.getBoundingClientRect();
+            const xPx = e.clientX - rect.left;
+            const yPx = e.clientY - rect.top;
+
+            const xMm = (xPx / canvasZoom) * PX_TO_MM;
+            const yMm = (yPx / canvasZoom) * PX_TO_MM;
+
+            const previewPath = document.getElementById('draw-preview-path');
+            const startPoint = currentDrawPoints[0];
+
+            if (e.shiftKey) {
+                // Mode Garis Lurus: Snap ke Horizontal (0°), Vertikal (90°), atau Diagonal (45°)
+                let targetX = xMm;
+                let targetY = yMm;
+                const dx = xMm - startPoint.x;
+                const dy = yMm - startPoint.y;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+
+                if (absDx > absDy * 1.732) {
+                    targetY = startPoint.y;
+                } else if (absDy > absDx * 1.732) {
+                    targetX = startPoint.x;
+                } else {
+                    const dist = (absDx + absDy) / 2;
+                    targetX = startPoint.x + Math.sign(dx) * dist;
+                    targetY = startPoint.y + Math.sign(dy) * dist;
+                }
+
+                currentDrawPoints = [startPoint, { x: targetX, y: targetY }];
+            } else {
+                currentDrawPoints.push({ x: xMm, y: yMm });
+            }
+
+            // Render ulang pratinjau garis SVG secara instan
+            let pathD = `M ${startPoint.x * MM_TO_PX} ${startPoint.y * MM_TO_PX}`;
+            for (let i = 1; i < currentDrawPoints.length; i++) {
+                pathD += ` L ${currentDrawPoints[i].x * MM_TO_PX} ${currentDrawPoints[i].y * MM_TO_PX}`;
+            }
+            previewPath.setAttribute('d', pathD);
+        }
+
+        function handleFreehandDrawEnd() {
+            if (!isDrawingMode) return;
+            isDrawingMode = false;
+
+            const previewSvg = document.getElementById('draw-preview-svg');
+            previewSvg.classList.add('hidden');
+
+            if (currentDrawPoints.length < 2) return;
+
+            const xs = currentDrawPoints.map(p => p.x);
+            const ys = currentDrawPoints.map(p => p.y);
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+
+            const wMm = maxX - minX;
+            const hMm = maxY - minY;
+
+            if (wMm <= 1 && hMm <= 1) return;
+
+            const normalizedPoints = currentDrawPoints.map(p => {
+                const rx = wMm > 0 ? ((p.x - minX) / wMm) * 100 : 0;
+                const ry = hMm > 0 ? ((p.y - minY) / hMm) * 100 : 0;
+                return `${rx.toFixed(2)},${ry.toFixed(2)}`;
+            });
+
+            const pointsString = normalizedPoints.join(' ');
+            const id = 'el-' + (++elementCounter);
+
+            const drawStrokeObject = {
+                id: id,
+                type: 'shape',
+                shapeType: 'freehand_path',
+                points: pointsString,
+                name: 'Coretan Bebas',
+                color: activeBrushColor,
+                strokeColor: '#000000',
+                strokeWidth: activeBrushSize,
+                brushStyle: activeBrushStyle,
+                wMm: Math.max(5, wMm),
+                hMm: Math.max(5, hMm),
+                xMm: minX,
+                yMm: minY,
+                angle: 0,
+                opacity: activeBrushStyle === 'highlighter' ? 40 : 100,
+                aspectRatio: wMm / hMm,
+                zIndex: elementsList.length + 1
+            };
+
+            elementsList.push(drawStrokeObject);
+            renderElementOnCanvas(drawStrokeObject);
+            selectElement(id);
+            syncActivePage();
+        }
+
+        function clearCurrentTempDrawing() {
+            currentDrawPoints = [];
+            const previewPath = document.getElementById('draw-preview-path');
+            if (previewPath) previewPath.setAttribute('d', '');
+            showFloatingNotification("Sketsa saat ini dibersihkan.");
+        }
+
         function toggleFullscreen() {
             if (!document.fullscreenElement && 
                 !document.mozFullScreenElement && 
                 !document.webkitFullscreenElement && 
                 !document.msFullscreenElement) {
                 
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) {
-                    document.documentElement.msRequestFullscreen();
-                } else if (document.documentElement.mozRequestFullScreen) {
-                    document.documentElement.mozRequestFullScreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                }
+                enterFullscreen();
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
@@ -1491,19 +1774,23 @@
             if (icon && text) {
                 if (isFullscreen) {
                     icon.className = "fa-solid fa-compress";
-                    text.textContent = "Keluar Layar Penuh";
-                    showFloatingNotification("Aplikasi berjalan dalam mode Layar Penuh.");
+                    text.textContent = "Keluar Layar";
+                    showFloatingNotification("Mode Layar Penuh Aktif.");
                 } else {
                     icon.className = "fa-solid fa-expand";
                     text.textContent = "Layar Penuh";
-                    showFloatingNotification("Keluar dari mode Layar Penuh.");
+                    
+                    // Jika layar dikunci tapi mendadak lepas, peringatkan atau snap kembali
+                    if (isFullscreenLocked) {
+                        showFloatingNotification("Kunci Aktif! Klik di mana saja untuk kembali Layar Penuh.");
+                    } else {
+                        showFloatingNotification("Keluar dari Mode Layar Penuh.");
+                    }
                 }
             }
         }
 
-        // --- SISTEM SELEKSI MULTI-OBJEK & GROUPING ENGINE ---
         function selectElement(id, isMultiSelect = false) {
-            // Hapus highlight seleksi dari elemen yang sebelumnya terpilih jika bukan mode multi-select
             if (!isMultiSelect) {
                 selectedElementIds.forEach(oldId => {
                     toggleElementHighlight(oldId, false);
@@ -1515,11 +1802,9 @@
                 if (isMultiSelect) {
                     const existIndex = selectedElementIds.indexOf(id);
                     if (existIndex > -1) {
-                        // Jika sudah ada, hapus dari seleksi (Toggle mode)
                         selectedElementIds.splice(existIndex, 1);
                         toggleElementHighlight(id, false);
                     } else {
-                        // Tambahkan ke daftar multi-seleksi
                         selectedElementIds.push(id);
                         toggleElementHighlight(id, true);
                     }
@@ -1528,14 +1813,12 @@
                     toggleElementHighlight(id, true);
                 }
 
-                // Jadikan elemen terakhir yang dipilih sebagai fokus utama properti
                 selectedElementId = selectedElementIds.length > 0 ? selectedElementIds[selectedElementIds.length - 1] : null;
             } else {
                 selectedElementIds = [];
                 selectedElementId = null;
             }
 
-            // Atur tampilan panel properti sesuai elemen terpilih
             if (selectedElementId && selectedElementIds.length === 1) {
                 document.getElementById('no-selection-hint').classList.add('hidden');
                 document.getElementById('properties-active-panel').classList.remove('hidden');
@@ -1564,7 +1847,6 @@
                     selectionBorder.classList.remove('hidden', 'border-dashed');
                     selectionBorder.classList.add('border-solid');
                 }
-                // Hanya tunjukkan handle transformasi jika hanya SATU objek yang terpilih agar tidak semrawut
                 if (selectedElementIds.length === 1) {
                     handles.forEach(h => h.classList.remove('hidden'));
                 } else {
@@ -1604,15 +1886,12 @@
             }
         }
 
-        // FUNGSI GABUNGKAN (GROUPING)
         function groupSelectedElements() {
             if (selectedElementIds.length < 2) return;
 
-            // Kumpulkan data objek yang akan digabungkan
             const itemsToGroup = elementsList.filter(item => selectedElementIds.includes(item.id));
             if (itemsToGroup.length === 0) return;
 
-            // Cari batas luar / Bounding Box (Min & Max koordinat dari semua objek)
             let minX = Infinity, maxX = -Infinity;
             let minY = Infinity, maxY = -Infinity;
 
@@ -1628,7 +1907,6 @@
 
             if (groupWMm <= 0 || groupHMm <= 0) return;
 
-            // Buat struktur objek anak di dalam grup secara relatif
             const groupChildren = itemsToGroup.map(item => {
                 return {
                     ...item,
@@ -1637,13 +1915,12 @@
                 };
             });
 
-            // Buat ID unik untuk elemen grup baru
             const groupId = 'el-' + (++elementCounter);
 
             const groupElement = {
                 id: groupId,
                 type: 'group',
-                name: `Grup Logo/Objek (${groupChildren.length})`,
+                name: `Grup Objek (${groupChildren.length})`,
                 children: groupChildren,
                 wMm: groupWMm,
                 hMm: groupHMm,
@@ -1655,7 +1932,6 @@
                 zIndex: elementsList.length + 1
             };
 
-            // Hapus objek-objek penyusun lama dari kanvas & list utama
             itemsToGroup.forEach(item => {
                 const dom = document.getElementById(item.id);
                 if (dom) dom.remove();
@@ -1664,18 +1940,14 @@
                 if (index !== -1) elementsList.splice(index, 1);
             });
 
-            // Masukkan objek Grup baru ke list kanvas
             elementsList.push(groupElement);
             renderElementOnCanvas(groupElement);
 
-            // Fokuskan seleksi ke objek grup baru tersebut
             selectElement(groupId);
             syncActivePage();
-
-            showFloatingNotification(`📦 Berhasil menggabungkan ${groupChildren.length} objek menjadi 1 Grup.`);
+            showFloatingNotification(`📦 Berhasil menggabungkan ${groupChildren.length} objek.`);
         }
 
-        // FUNGSI PISAHKAN (UNGROUPING)
         function ungroupSelectedElement() {
             if (selectedElementIds.length !== 1) return;
             
@@ -1684,22 +1956,20 @@
 
             const baseXMm = groupItem.xMm;
             const baseYMm = groupItem.yMm;
-            const groupAngle = groupItem.angle; // Mendukung offset rotasi dasar grup
+            const groupAngle = groupItem.angle;
 
             const restoredIds = [];
 
-            // Kembalikan koordinat relatif anak-anak menjadi absolut kembali di kanvas
             groupItem.children.forEach(child => {
                 const restoredItem = {
                     ...child,
-                    id: 'el-' + (++elementCounter), // Buat ID baru agar tidak bentrok
+                    id: 'el-' + (++elementCounter),
                     xMm: baseXMm + child.relX,
                     yMm: baseYMm + child.relY,
-                    angle: child.angle + groupAngle, // Akumulasi rotasi grup ke objek asal
+                    angle: child.angle + groupAngle,
                     zIndex: elementsList.length + 1
                 };
 
-                // Hapus variabel pembantu relatif
                 delete restoredItem.relX;
                 delete restoredItem.relY;
 
@@ -1708,24 +1978,21 @@
                 restoredIds.push(restoredItem.id);
             });
 
-            // Hapus container Grup dari kanvas
             const groupDom = document.getElementById(groupItem.id);
             if (groupDom) groupDom.remove();
 
             const groupIndex = elementsList.findIndex(el => el.id === groupItem.id);
             if (groupIndex !== -1) elementsList.splice(groupIndex, 1);
 
-            // Reset seleksi dan pilih semua objek lepasan tersebut bersamaan
             selectElement(null);
             restoredIds.forEach(id => {
                 selectElement(id, true);
             });
 
             syncActivePage();
-            showFloatingNotification(`🔓 Grup dilepas menjadi ${restoredIds.length} objek asal.`);
+            showFloatingNotification(`🔓 Grup dipisahkan.`);
         }
 
-        // --- SISTEM KONTROL TRANSLASI DAN SWITCHING HALAMAN (MULTIPLE CANVAS) ---
         function renderPageTabs() {
             const container = document.getElementById('pages-container');
             if (!container) return;
@@ -1741,7 +2008,6 @@
                         : 'bg-editor-bg/80 text-gray-400 hover:text-white hover:bg-editor-hover'
                 }`;
                 
-                // Double Click untuk Mengubah Nama Halaman Instan
                 tab.ondblclick = (e) => {
                     e.stopPropagation();
                     renamePage(index);
@@ -1751,7 +2017,7 @@
                 
                 tab.innerHTML = `
                     <span>${page.name}</span>
-                    <span class="text-[9px] px-1 py-0.2 rounded-full ${isActive ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-gray-500'} font-normal">${page.elements.length}</span>
+                    <span class="text-[9px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-gray-500'} font-normal">${page.elements.length}</span>
                 `;
                 container.appendChild(tab);
             });
@@ -1759,25 +2025,18 @@
 
         function switchPage(index) {
             if (index < 0 || index >= pagesList.length) return;
-            
-            // Simpan kondisi halaman yang sedang aktif terlebih dahulu
             pagesList[activePageIndex].elements = [...elementsList];
             
-            // Ganti referensi halaman aktif ke index baru
             activePageIndex = index;
             elementsList = pagesList[activePageIndex].elements;
             
-            // Render ulang kanvas
             renderAllElementsOfActivePage();
             renderPageTabs();
             selectElement(null);
             updateElementsCountStatus();
-            
-            showFloatingNotification(`Beralih ke "${pagesList[activePageIndex].name}"`);
         }
 
         function addNewPage() {
-            // Amankan koordinat data halaman lama
             pagesList[activePageIndex].elements = [...elementsList];
             
             pageCounter++;
@@ -1796,20 +2055,18 @@
             renderPageTabs();
             selectElement(null);
             updateElementsCountStatus();
-            
             showFloatingNotification(`Kanvas baru "${newPage.name}" ditambahkan!`);
         }
 
         function deleteCurrentPage() {
             if (pagesList.length <= 1) {
-                showFloatingNotification("Gagal! Minimal harus memiliki 1 lembar kanvas.");
+                showFloatingNotification("Gagal! Minimal harus memiliki 1 halaman kanvas.");
                 return;
             }
             
             const removedName = pagesList[activePageIndex].name;
             pagesList.splice(activePageIndex, 1);
             
-            // Koreksi offset letak index halaman pasca penghapusan
             if (activePageIndex >= pagesList.length) {
                 activePageIndex = pagesList.length - 1;
             }
@@ -1820,18 +2077,40 @@
             renderPageTabs();
             selectElement(null);
             updateElementsCountStatus();
-            
             showFloatingNotification(`Kanvas "${removedName}" berhasil dihapus.`);
         }
 
         function renamePage(index) {
+            renderPageTabs(); 
+            const container = document.getElementById('pages-container');
+            const tabElement = container.children[index];
+            if (!tabElement) return;
+
+            const span = tabElement.querySelector('span');
             const oldName = pagesList[index].name;
-            const newName = prompt("Ubah Nama Halaman Kanvas:", oldName);
-            if (newName && newName.trim() !== "") {
-                pagesList[index].name = newName.trim();
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldName;
+            input.className = "bg-zinc-800 text-white px-2 py-0.5 rounded text-xs border border-editor-active w-24 font-semibold text-center";
+            
+            tabElement.replaceChild(input, span);
+            input.focus();
+            input.select();
+
+            const savePageName = () => {
+                const val = input.value.trim();
+                if (val) {
+                    pagesList[index].name = val;
+                }
                 renderPageTabs();
-                showFloatingNotification(`Nama halaman diubah menjadi "${newName.trim()}"`);
-            }
+            };
+
+            input.onblur = savePageName;
+            input.onkeydown = (evt) => {
+                if (evt.key === 'Enter') savePageName();
+                if (evt.key === 'Escape') renderPageTabs();
+            };
         }
 
         function prevPage() {
@@ -1860,7 +2139,6 @@
             updateElementsCountStatus();
         }
 
-        // --- KONTROL UPDATE TAMPILAN KANVAS ---
         function updateCanvasDimensions() {
             let widthMm = 210;
             let heightMm = 297;
@@ -1869,7 +2147,6 @@
             if (currentPaperPreset === 'CUSTOM') {
                 widthMm = customWidthMm;
                 heightMm = customHeightMm;
-                
                 const unit = document.getElementById('custom-canvas-unit').value;
                 let displayW = customWidthMm;
                 let displayH = customHeightMm;
@@ -1881,8 +2158,7 @@
                     displayW = customWidthMm / 25.4;
                     displayH = customHeightMm / 25.4;
                 }
-
-                labelText = `Custom (${parseFloat(displayW.toFixed(2))} x ${parseFloat(displayH.toFixed(2))} ${unit})`;
+                labelText = `Kustom (${parseFloat(displayW.toFixed(2))} x ${parseFloat(displayH.toFixed(2))} ${unit})`;
             } else {
                 const preset = CANVAS_PRESETS[currentPaperPreset];
                 widthMm = preset.widthMm;
@@ -1934,89 +2210,6 @@
             document.getElementById('footer-status-margins').textContent = `Margin: L:${marginLeftMm} R:${marginRightMm} T:${marginTopMm} B:${marginBottomMm} mm`;
         }
 
-        function updateDrawPreview() {
-            const svgOverlay = document.getElementById('draw-preview-svg');
-            const pathPreview = document.getElementById('draw-preview-path');
-            
-            if (currentDrawPoints.length === 0) {
-                svgOverlay.classList.add('hidden');
-                return;
-            }
-
-            svgOverlay.classList.remove('hidden');
-
-            let pathD = `M ${currentDrawPoints[0].x * MM_TO_PX} ${currentDrawPoints[0].y * MM_TO_PX}`;
-            for (let i = 1; i < currentDrawPoints.length; i++) {
-                pathD += ` L ${currentDrawPoints[i].x * MM_TO_PX} ${currentDrawPoints[i].y * MM_TO_PX}`;
-            }
-
-            pathPreview.setAttribute('d', pathD);
-        }
-
-        function finishManualDrawing() {
-            if (currentDrawPoints.length < 3) return;
-
-            const xs = currentDrawPoints.map(p => p.x);
-            const ys = currentDrawPoints.map(p => p.y);
-            const minX = Math.min(...xs);
-            const maxX = Math.max(...xs);
-            const minY = Math.min(...ys);
-            const maxY = Math.max(...ys);
-
-            const wMm = maxX - minX;
-            const hMm = maxY - minY;
-
-            if (wMm <= 0.5 || hMm <= 0.5) {
-                cancelManualDrawing();
-                return;
-            }
-
-            const normalizedPoints = currentDrawPoints.map(p => {
-                const rx = ((p.x - minX) / wMm) * 100;
-                const ry = ((p.y - minY) / hMm) * 100;
-                return `${rx.toFixed(2)},${ry.toFixed(2)}`;
-            });
-
-            const pointsString = normalizedPoints.join(' ');
-            const id = 'el-' + (++elementCounter);
-
-            const customShapeItem = {
-                id: id,
-                type: 'shape',
-                shapeType: 'custom_path',
-                points: pointsString,
-                name: 'Logo Manual Kustom',
-                color: '#007acc',
-                strokeColor: '#1e1e1f',
-                strokeWidth: 2,
-                wMm: wMm,
-                hMm: hMm,
-                xMm: minX,
-                yMm: minY,
-                angle: 0,
-                opacity: 100,
-                aspectRatio: wMm / hMm,
-                zIndex: elementsList.length + 1
-            };
-
-            elementsList.push(customShapeItem);
-            renderElementOnCanvas(customShapeItem);
-            
-            selectTool('move');
-            selectElement(id);
-            syncActivePage();
-            
-            showFloatingNotification("Berhasil! Logo kustom Anda kini siap diperbesar dan didesain.");
-        }
-
-        function cancelManualDrawing() {
-            currentDrawPoints = [];
-            updateDrawPreview();
-            selectTool('move');
-            showFloatingNotification("Menggambar bentuk kustom dibatalkan.");
-        }
-
-        // --- ASISTEN PENJIPLAK TEMPLATE ---
         function triggerTracingUpload() {
             document.getElementById('tracing-file-uploader').click();
         }
@@ -2028,7 +2221,6 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imgUrl = e.target.result;
-                
                 const trLayer = document.getElementById('tracing-template-layer');
                 const trImg = document.getElementById('tracing-template-image');
                 
@@ -2037,8 +2229,7 @@
 
                 document.getElementById('btn-clear-tracing').classList.remove('hidden');
                 document.getElementById('tracing-controls-group').classList.remove('hidden');
-                
-                showFloatingNotification("Gambar panduan berhasil diunggah! Atur opasitas & skala untuk membantu menjiplak.");
+                showFloatingNotification("Gambar panduan berhasil diunggah!");
             };
             reader.readAsDataURL(file);
             event.target.value = '';
@@ -2065,7 +2256,6 @@
 
             document.getElementById('btn-clear-tracing').classList.add('hidden');
             document.getElementById('tracing-controls-group').classList.add('hidden');
-            
             showFloatingNotification("Gambar penjiplak dibersihkan.");
         }
 
@@ -2132,10 +2322,10 @@
 
             customWidthMm = Math.max(50, Math.min(2000, wMm));
             customHeightMm = Math.max(50, Math.min(2000, hMm));
-            
             updateCanvasDimensions();
         }
 
+        // --- MENGONVERSI UKURAN UNIT KUSTOM ---
         function onCustomUnitChange() {
             const unit = document.getElementById('custom-canvas-unit').value;
             let displayW = customWidthMm;
@@ -2151,7 +2341,6 @@
 
             document.getElementById('custom-canvas-width').value = parseFloat(displayW.toFixed(2));
             document.getElementById('custom-canvas-height').value = parseFloat(displayH.toFixed(2));
-
             updateCanvasDimensions();
         }
 
@@ -2183,7 +2372,6 @@
             }
         }
 
-        // --- SISTEM KONTROL VIEWPORT ---
         function applyZoom() {
             const wrapper = document.getElementById('canvas-wrapper');
             wrapper.style.transform = `scale(${canvasZoom})`;
@@ -2217,6 +2405,13 @@
             reader.onload = function(e) {
                 const imgUrl = e.target.result;
                 addNewImageElement(imgUrl, file.name);
+
+                // Kembalikan fullscreen agresif jika kunci diaktifkan
+                if (isFullscreenLocked && !document.fullscreenElement) {
+                    setTimeout(() => {
+                        enterFullscreen();
+                    }, 400);
+                }
             };
             reader.readAsDataURL(file);
             event.target.value = '';
@@ -2224,7 +2419,6 @@
 
         function addNewImageElement(src, name = 'Foto Baru') {
             const id = 'el-' + (++elementCounter);
-            
             const tempImg = new Image();
             tempImg.onload = function() {
                 const aspect = tempImg.naturalWidth / tempImg.naturalHeight;
@@ -2305,7 +2499,6 @@
 
         function addShapeElement(shapeType, name = 'Bentuk Baru') {
             const id = 'el-' + (++elementCounter);
-            
             const item = {
                 id: id,
                 type: 'shape',
@@ -2333,7 +2526,6 @@
 
         function getComputedTextStyles(item) {
             let textShadowStyle = "none";
-            
             if (item.shadowPreset === 'shadow') {
                 textShadowStyle = "2px 2px 4px rgba(0, 0, 0, 0.5)";
             } else if (item.shadowPreset === 'glow') {
@@ -2343,13 +2535,9 @@
             } else if (item.shadowPreset === 'outline') {
                 textShadowStyle = `-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 0 rgba(0,0,0,0.45)`;
             }
-
-            return {
-                textShadow: textShadowStyle
-            };
+            return { textShadow: textShadowStyle };
         }
 
-        // GENERATE KONTEN ANAK-ANAK DI DALAM GROUP SECARA REKURSIF
         function getGroupInnerContent(item) {
             let html = '';
             item.children.forEach(child => {
@@ -2397,7 +2585,12 @@
                         `;
                     }
                 } else if (child.type === 'shape') {
-                    let shapeContent = child.shapeType === 'custom_path' ? `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="${child.points}" /></svg>` : getShapeSVG(child.shapeType);
+                    let shapeContent = '';
+                    if (child.shapeType === 'freehand_path') {
+                        shapeContent = getFreehandPathSVG(child);
+                    } else {
+                        shapeContent = child.shapeType === 'custom_path' ? `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="${child.points}" /></svg>` : getShapeSVG(child.shapeType);
+                    }
                     inner = `<div class="w-full h-full" style="color: ${child.color}; fill: currentColor; stroke: ${child.strokeColor}; stroke-width: ${child.strokeWidth}px;">${shapeContent}</div>`;
                 }
 
@@ -2408,6 +2601,34 @@
                 `;
             });
             return html;
+        }
+
+        function getFreehandPathSVG(item) {
+            const wPx = item.wMm * MM_TO_PX;
+            const hPx = item.hMm * MM_TO_PX;
+
+            const pts = item.points.split(' ').map(p => {
+                const xy = p.split(',');
+                const x = (parseFloat(xy[0]) / 100) * wPx;
+                const y = (parseFloat(xy[1]) / 100) * hPx;
+                return `${x},${y}`;
+            });
+
+            const dPath = pts.length > 0 ? `M ${pts[0].replace(',', ' ')} ` + pts.slice(1).map(pt => `L ${pt.replace(',', ' ')}`).join(' ') : '';
+            
+            let opacityAttr = "1.0";
+            let strokeDashAttr = "none";
+            let transformAttr = "";
+
+            if (item.brushStyle === 'dashed') strokeDashAttr = "8,8";
+            if (item.brushStyle === 'highlighter') opacityAttr = "0.5";
+            if (item.brushStyle === 'calligraphy') transformAttr = `transform="rotate(-15) skewX(10)"`;
+
+            return `
+                <svg viewBox="0 0 ${wPx} ${hPx}" width="100%" height="100%" class="overflow-visible" preserveAspectRatio="none">
+                    <path d="${dPath}" fill="none" stroke="${item.color}" stroke-width="${item.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${strokeDashAttr}" opacity="${opacityAttr}" ${transformAttr} />
+                </svg>
+            `;
         }
 
         function renderElementOnCanvas(item) {
@@ -2424,9 +2645,7 @@
 
             let innerContent = '';
             if (item.type === 'image') {
-                innerContent = `
-                    <img src="${item.src}" class="w-full h-full object-cover pointer-events-none rounded shadow-sm">
-                `;
+                innerContent = `<img src="${item.src}" class="w-full h-full object-cover pointer-events-none rounded shadow-sm">`;
             } else if (item.type === 'text') {
                 const styles = getComputedTextStyles(item);
                 const wPx = item.wMm * MM_TO_PX;
@@ -2449,17 +2668,14 @@
                     const cVal = item.curve;
                     
                     if (cVal > 0) {
-                        startY = hPx * 0.85;
-                        endY = hPx * 0.85;
+                        startY = hPx * 0.85; endY = hPx * 0.85;
                         controlY = hPx * 0.85 - (cVal / 100) * (hPx * 0.75);
                     } else {
-                        startY = hPx * 0.15;
-                        endY = hPx * 0.15;
+                        startY = hPx * 0.15; endY = hPx * 0.15;
                         controlY = hPx * 0.15 - (cVal / 100) * (hPx * 0.75);
                     }
 
                     const pathD = `M 5,${startY} Q ${wPx / 2},${controlY} ${wPx - 5},${endY}`;
-
                     innerContent = `
                         <div class="w-full h-full flex items-center justify-center">
                             <svg width="100%" height="100%" viewBox="0 0 ${wPx} ${hPx}" class="overflow-visible">
@@ -2468,18 +2684,9 @@
                                     <path id="curve-path-${item.id}" d="${pathD}" fill="transparent" />
                                 </defs>
                                 <text text-anchor="middle" dominant-baseline="central"
-                                      style="font-family: ${item.fontFamily}, sans-serif; 
-                                             font-size: ${item.fontSize}px; 
-                                             font-weight: ${item.fontWeight}; 
-                                             font-style: ${item.fontStyle}; 
-                                             text-shadow: ${styles.textShadow};"
-                                      fill="${textFill}" 
-                                      stroke="${item.strokeColor}" 
-                                      stroke-width="${item.strokeWidth}"
-                                      paint-order="stroke fill">
-                                    <textPath href="#curve-path-${item.id}" startOffset="50%">
-                                        ${item.text}
-                                    </textPath>
+                                      style="font-family: ${item.fontFamily}, sans-serif; font-size: ${item.fontSize}px; font-weight: ${item.fontWeight}; font-style: ${item.fontStyle}; text-shadow: ${styles.textShadow};"
+                                      fill="${textFill}" stroke="${item.strokeColor}" stroke-width="${item.strokeWidth}" paint-order="stroke fill">
+                                    <textPath href="#curve-path-${item.id}" startOffset="50%">${item.text}</textPath>
                                 </text>
                             </svg>
                         </div>
@@ -2487,23 +2694,18 @@
                 } else {
                     const isGrad = item.gradientEnabled;
                     const fillStyle = isGrad ? `background: linear-gradient(${item.gradientAngle}, ${item.textColor}, ${item.gradientColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent;` : `color: ${item.textColor};`;
-                    
                     innerContent = `
                         <div class="w-full h-full flex items-center justify-center font-bold text-center leading-none" 
-                             style="font-family: ${item.fontFamily}, sans-serif; 
-                                    font-size: ${item.fontSize}px; 
-                                    font-style: ${item.fontStyle}; 
-                                    font-weight: ${item.fontWeight}; 
-                                    text-shadow: ${styles.textShadow}; 
-                                    -webkit-text-stroke: ${item.strokeWidth}px ${item.strokeColor};
-                                    ${fillStyle}">
+                             style="font-family: ${item.fontFamily}, sans-serif; font-size: ${item.fontSize}px; font-style: ${item.fontStyle}; font-weight: ${item.fontWeight}; text-shadow: ${styles.textShadow}; -webkit-text-stroke: ${item.strokeWidth}px ${item.strokeColor}; ${fillStyle}">
                             ${item.text}
                         </div>
                     `;
                 }
             } else if (item.type === 'shape') {
                 let shapeContent = '';
-                if (item.shapeType === 'custom_path') {
+                if (item.shapeType === 'freehand_path') {
+                    shapeContent = getFreehandPathSVG(item);
+                } else if (item.shapeType === 'custom_path') {
                     shapeContent = `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="${item.points}" /></svg>`;
                 } else {
                     shapeContent = getShapeSVG(item.shapeType);
@@ -2519,13 +2721,9 @@
             }
 
             div.innerHTML = `
-                <div class="element-payload w-full h-full relative">
-                    ${innerContent}
-                </div>
-                <!-- Selection Highlight Frame -->
+                <div class="element-payload w-full h-full relative">${innerContent}</div>
                 <div class="selection-border absolute inset-0 border-2 border-dashed border-editor-active pointer-events-none hidden group-hover:block"></div>
                 
-                <!-- 8 Selection Handle Titik Manipulasi Lengkap -->
                 <div class="resize-handle resize-handle-tl print-hidden hidden" data-handle="tl"></div>
                 <div class="resize-handle resize-handle-tr print-hidden hidden" data-handle="tr"></div>
                 <div class="resize-handle resize-handle-bl print-hidden hidden" data-handle="bl"></div>
@@ -2536,7 +2734,6 @@
                 <div class="resize-handle resize-handle-l print-hidden hidden" data-handle="l"></div>
                 <div class="resize-handle resize-handle-r print-hidden hidden" data-handle="r"></div>
 
-                <!-- Rotate Handle -->
                 <div class="rotate-line print-hidden hidden"></div>
                 <div class="rotate-handle print-hidden hidden" data-handle="rotate"></div>
             `;
@@ -2550,7 +2747,7 @@
                     initiateTransform(item.id, handle, e);
                 } else {
                     e.stopPropagation();
-                    const isMultiSelect = e.ctrlKey || e.metaKey; // Ctrl (Windows) / Cmd (Mac) key
+                    const isMultiSelect = e.ctrlKey || e.metaKey;
                     selectElement(item.id, isMultiSelect);
                     initiateDrag(item.id, e);
                 }
@@ -2567,7 +2764,7 @@
 
                 const input = document.createElement('textarea');
                 input.value = item.text;
-                input.className = "absolute inset-0 w-full h-full bg-white border-2 border-editor-active text-black text-center focus:outline-none z-[100] px-1 py-1 rounded resize-none";
+                input.className = "absolute inset-0 w-full h-full bg-white border-2 border-editor-active text-black text-center focus:outline-none z-[100] px-1 py-1 rounded resize-none animate-pulse-short";
                 input.style.fontFamily = input.style.fontFamily;
                 input.style.fontSize = `${item.fontSize}px`;
                 input.style.fontWeight = item.fontWeight;
@@ -2605,7 +2802,6 @@
             });
 
             container.appendChild(div);
-            
             if (selectedElementIds.includes(item.id)) {
                 toggleElementHighlight(item.id, true);
             }
@@ -2637,7 +2833,7 @@
                 document.getElementById('elem-type-badge').className = "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-700 text-white";
                 document.getElementById('image-action-controls').classList.remove('hidden');
             } else if (item.type === 'text') {
-                thumbEl.innerHTML = `<i class="fa-solid fa-font text-2xl"></i>`;
+                thumbEl.innerHTML = `<i class="fa-solid fa-font text-2xl text-yellow-400"></i>`;
                 document.getElementById('elem-type-badge').textContent = "TEKS";
                 document.getElementById('elem-type-badge').className = "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-yellow-600 text-white";
                 document.getElementById('text-edit-controls-group').classList.remove('hidden');
@@ -2667,7 +2863,9 @@
 
             } else if (item.type === 'shape') {
                 let previewIcon = '';
-                if (item.shapeType === 'custom_path') {
+                if (item.shapeType === 'freehand_path') {
+                    previewIcon = `<i class="fa-solid fa-paint-brush text-2xl text-cyan-400"></i>`;
+                } else if (item.shapeType === 'custom_path') {
                     previewIcon = `<svg viewBox="0 0 100 100" class="w-8 h-8 text-cyan-400 fill-current"><polygon points="${item.points}" /></svg>`;
                 } else {
                     previewIcon = getShapeSVG(item.shapeType);
@@ -2721,14 +2919,12 @@
             document.getElementById('prop-height-unit').textContent = unit;
         }
 
-        // AKSI SERET (DRAGGING) MENDUKUNG SERET BERSAMAAN (GROUP / MULTI-SELECTION)
         let activeDragGroup = [];
 
         function initiateDrag(id, e) {
             isDragging = true;
             activeDragGroup = [];
 
-            // Jika objek yang diklik termasuk dalam daftar multi-seleksi, seret semuanya
             if (selectedElementIds.includes(id)) {
                 selectedElementIds.forEach(itemId => {
                     const item = elementsList.find(el => el.id === itemId);
@@ -2743,7 +2939,6 @@
                     });
                 });
             } else {
-                // Jika tidak, seret hanya satu objek ini saja
                 const item = elementsList.find(el => el.id === id);
                 const elDom = document.getElementById(id);
                 if (elDom) elDom.classList.remove('smooth-transition');
@@ -2755,7 +2950,6 @@
                     startY: item.yMm
                 });
             }
-
             dragStartMouseX = e.clientX;
             dragStartMouseY = e.clientY;
         }
@@ -2800,9 +2994,7 @@
                 });
                 
                 const mainItem = elementsList.find(el => el.id === selectedElementId);
-                if (mainItem) {
-                    fillPropertyInputs(mainItem);
-                }
+                if (mainItem) fillPropertyInputs(mainItem);
             } 
             else if (isResizing) {
                 const item = elementsList.find(el => el.id === selectedElementId);
@@ -2814,7 +3006,6 @@
 
                 const dxLocal = dxMm * cos + dyMm * sin;
                 const dyLocal = -dxMm * sin + dyMm * cos;
-
                 const isRatioLocked = document.getElementById('prop-ratio-checkbox').checked;
 
                 let newWMm = dragStartWidth;
@@ -2914,7 +3105,7 @@
                 item.xMm = newXMm;
                 item.yMm = newYMm;
 
-                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                     renderElementOnCanvas(item);
                 } else {
                     updateElementDOMTransform(elDom, item);
@@ -2931,12 +3122,8 @@
                 
                 const radians = Math.atan2(e.clientY - centerYPx, e.clientX - centerXPx);
                 let angle = Math.round(radians * (180 / Math.PI)) - 90;
-                
                 if (angle < 0) angle += 360;
-                
-                if (e.shiftKey) {
-                    angle = Math.round(angle / 5) * 5;
-                }
+                if (e.shiftKey) angle = Math.round(angle / 5) * 5;
 
                 item.angle = angle;
                 updateElementDOMTransform(elDom, item);
@@ -2992,7 +3179,7 @@
                 }
             }
 
-            if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+            if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                 renderElementOnCanvas(item);
             } else {
                 updateElementDOMTransform(elDom, item);
@@ -3014,7 +3201,6 @@
                 item.opacity = opacity;
                 document.getElementById('opacity-val-text').textContent = `${opacity}%`;
             }
-
             updateElementDOMTransform(elDom, item);
         }
 
@@ -3049,7 +3235,6 @@
             item.textColor = document.getElementById('prop-text-color').value;
             item.gradientColor2 = document.getElementById('prop-text-color-grad').value;
             item.gradientAngle = document.getElementById('prop-text-grad-angle').value;
-            
             renderElementOnCanvas(item);
         }
 
@@ -3090,7 +3275,6 @@
             const curveVal = parseInt(document.getElementById('prop-text-curve').value);
             item.curve = curveVal;
             document.getElementById('curve-val-text').textContent = `${curveVal}%`;
-            
             renderElementOnCanvas(item);
         }
 
@@ -3101,7 +3285,6 @@
 
             item.strokeColor = document.getElementById('prop-text-stroke-color').value;
             item.strokeWidth = parseInt(document.getElementById('prop-text-stroke-width').value) || 0;
-            
             renderElementOnCanvas(item);
         }
 
@@ -3145,6 +3328,7 @@
             const color = document.getElementById('prop-shape-color').value;
             item.color = color;
             elDom.querySelector('.shape-container').style.color = color;
+            if (item.shapeType === 'freehand_path') renderElementOnCanvas(item);
         }
 
         function updateShapeStrokeColor() {
@@ -3167,7 +3351,12 @@
             const width = parseInt(document.getElementById('prop-shape-stroke-width').value) || 0;
             item.strokeWidth = width;
             document.getElementById('shape-stroke-width-val').textContent = `${width} px`;
-            elDom.querySelector('.shape-container').style.strokeWidth = `${width}px`;
+            
+            if (item.shapeType === 'freehand_path') {
+                renderElementOnCanvas(item);
+            } else {
+                elDom.querySelector('.shape-container').style.strokeWidth = `${width}px`;
+            }
         }
 
         function getShapeSVG(type) {
@@ -3189,7 +3378,7 @@
                 droplet: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M50,10 C50,10 80,42 80,62 C80,78 66,92 50,92 C34,92 20,78 20,62 C20,42 50,10 50,10 Z" /></svg>`,
                 leaf: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M88,12 C88,12 56,18 38,42 C24,60 16,80 6,94 C20,84 42,76 60,62 C84,44 88,12 88,12 Z" /></svg>`,
                 cloud: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M32,76 C17,76 6,64 6,48 C6,34 16,23 29,22 C34,10 46,2 62,2 C77,2 90,13 94,28 C97,29 100,35 100,42 C100,58 87,76 68,76 Z" /></svg>`,
-                crown: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="15,85 85,85 90,38 66,58 50,20 34,58 10,38" /></svg>`,
+                crown: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="15,85 85,85 90,38 66,58 50,20 34,58 10,38" /></polygon></svg>`,
                 bubble: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M10,15 L90,15 L90,65 L35,65 L10,85 L20,65 L10,65 Z" /></svg>`,
                 infinity: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><path d="M30,30 C19,30 10,39 10,50 C10,61 19,70 30,70 C38,70 45,63 50,56 C55,63 62,70 70,70 C81,70 90,61 90,50 C90,39 81,30 70,30 C62,30 55,37 50,44 C45,37 38,30 30,30 Z M30,42 C34.4,42 38,45.6 38,50 C38,54.4 34.4,58 30,58 C25.6,58 22,54.4 22,50 C22,45.6 25.6,42 30,42 Z M70,42 C74.4,42 78,45.6 78,50 C78,54.4 74.4,58 70,58 C65.6,58 62,54.4 62,50 C62,45.6 65.6,42 70,42 Z" fill-rule="evenodd" /></svg>`,
                 hexagon: `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="50,10 88,32 88,68 50,90 12,68 12,32" /></svg>`,
@@ -3210,7 +3399,7 @@
                 item.aspectRatio = wMm / hMm;
                 item.name = name;
 
-                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                     renderElementOnCanvas(item);
                 } else {
                     updateElementDOMTransform(elDom, item);
@@ -3218,20 +3407,18 @@
                 fillPropertyInputs(item);
                 showFloatingNotification(`Objek terpilih diatur ke ${name}`);
             } else {
-                showFloatingNotification(`Silakan klik foto atau teks, lalu pilih preset ukuran ini.`);
+                showFloatingNotification("Silakan klik foto atau teks terlebih dahulu.");
             }
         }
 
         function tidyUpAllIntoGrid() {
             if (elementsList.length === 0) {
-                showFloatingNotification("Tidak ada elemen di atas kanvas untuk dirapikan.");
+                showFloatingNotification("Tidak ada elemen di atas kanvas.");
                 return;
             }
 
             const gapMm = parseFloat(document.getElementById('layout-spacing-input').value) || 5;
-
-            let canvasWMm = 210;
-            let canvasHMm = 297;
+            let canvasWMm = 210, canvasHMm = 297;
 
             if (currentPaperPreset === 'CUSTOM') {
                 canvasWMm = customWidthMm;
@@ -3266,22 +3453,18 @@
                 item.yMm = currentYMm;
                 item.angle = 0;
 
-                if (item.hMm > maxRowHeight) {
-                    maxRowHeight = item.hMm;
-                }
-
+                if (item.hMm > maxRowHeight) maxRowHeight = item.hMm;
                 currentXMm += item.wMm + gapMm;
 
                 elDom.classList.add('smooth-transition');
-                
-                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                     renderElementOnCanvas(item);
                 } else {
                     updateElementDOMTransform(elDom, item);
                 }
             });
 
-            showFloatingNotification("Tata letak semua objek berhasil dirapikan!");
+            showFloatingNotification("Tata letak rapi!");
             if (selectedElementId) {
                 const activeItem = elementsList.find(el => el.id === selectedElementId);
                 fillPropertyInputs(activeItem);
@@ -3289,11 +3472,7 @@
         }
 
         function snapAllToGridLines() {
-            if (elementsList.length === 0) {
-                showFloatingNotification("Tidak ada objek untuk diposisikan ke grid.");
-                return;
-            }
-
+            if (elementsList.length === 0) return;
             const snapFactor = 5;
 
             elementsList.forEach((item) => {
@@ -3304,14 +3483,14 @@
                 item.yMm = Math.round(item.yMm / snapFactor) * snapFactor;
 
                 elDom.classList.add('smooth-transition');
-                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+                if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                     renderElementOnCanvas(item);
                 } else {
                     updateElementDOMTransform(elDom, item);
                 }
             });
 
-            showFloatingNotification("Semua objek disejajarkan ke grid terdekat!");
+            showFloatingNotification("Objek sejajar grid!");
             if (selectedElementId) {
                 const activeItem = elementsList.find(el => el.id === selectedElementId);
                 fillPropertyInputs(activeItem);
@@ -3320,20 +3499,18 @@
 
         function autoFillSelected() {
             if (!selectedElementId) {
-                showFloatingNotification("Pilih satu foto di atas kanvas terlebih dahulu.");
+                showFloatingNotification("Pilih satu foto terlebih dahulu.");
                 return;
             }
 
             const sourceItem = elementsList.find(el => el.id === selectedElementId);
             if (sourceItem.type !== 'image') {
-                showFloatingNotification("Hanya elemen Foto yang dapat dilakukan Auto-Fill Layout.");
+                showFloatingNotification("Hanya elemen Foto yang dapat dilakukan Auto-Fill.");
                 return;
             }
 
             const gapMm = parseFloat(document.getElementById('layout-spacing-input').value) || 5;
-
-            let canvasWMm = 210;
-            let canvasHMm = 297;
+            let canvasWMm = 210, canvasHMm = 297;
 
             if (currentPaperPreset === 'CUSTOM') {
                 canvasWMm = customWidthMm;
@@ -3359,10 +3536,7 @@
             const cols = Math.floor((activeAreaWMm + gapMm) / (itemWMm + gapMm));
             const rows = Math.floor((activeAreaHMm + gapMm) / (itemHMm + gapMm));
 
-            if (cols <= 0 || rows <= 0) {
-                showFloatingNotification("Ukuran terlalu besar untuk memuat minimal 1 baris grid.");
-                return;
-            }
+            if (cols <= 0 || rows <= 0) return;
 
             const savedSrc = sourceItem.src;
             const savedOrigSrc = sourceItem.originalSrc || sourceItem.src;
@@ -3382,7 +3556,7 @@
                     const newItem = {
                         id: id,
                         type: 'image',
-                        name: `${savedName} (Copy)`,
+                        name: `${savedName} (Kopi)`,
                         src: savedSrc,
                         originalSrc: savedOrigSrc,
                         wMm: savedWidth,
@@ -3394,22 +3568,17 @@
                         aspectRatio: savedAspect,
                         zIndex: elementsList.length + 1
                     };
-
                     elementsList.push(newItem);
                     renderElementOnCanvas(newItem);
                 }
             }
-
-            showFloatingNotification(`Auto-Fill berhasil: Menyusun ${cols * rows} foto.`);
             syncActivePage();
             selectElement(null);
         }
 
         function alignSelected(type) {
             if (selectedElementIds.length === 0) return;
-
-            let canvasWMm = 210;
-            let canvasHMm = 297;
+            let canvasWMm = 210, canvasHMm = 297;
 
             if (currentPaperPreset === 'CUSTOM') {
                 canvasWMm = customWidthMm;
@@ -3426,30 +3595,21 @@
                 canvasHMm = temp;
             }
 
-            // Jalankan perataan ke semua elemen terpilih sekaligus
             selectedElementIds.forEach(id => {
                 const item = elementsList.find(el => el.id === id);
                 if (!item) return;
 
                 const elDom = document.getElementById(id);
-
-                if (type === 'left') {
-                    item.xMm = marginLeftMm;
-                } else if (type === 'centerX') {
-                    item.xMm = (canvasWMm - item.wMm) / 2;
-                } else if (type === 'right') {
-                    item.xMm = canvasWMm - item.wMm - marginRightMm;
-                } else if (type === 'top') {
-                    item.yMm = marginTopMm;
-                } else if (type === 'centerY') {
-                    item.yMm = (canvasHMm - item.hMm) / 2;
-                } else if (type === 'bottom') {
-                    item.yMm = canvasHMm - item.hMm - marginBottomMm;
-                }
+                if (type === 'left') item.xMm = marginLeftMm;
+                else if (type === 'centerX') item.xMm = (canvasWMm - item.wMm) / 2;
+                else if (type === 'right') item.xMm = canvasWMm - item.wMm - marginRightMm;
+                else if (type === 'top') item.yMm = marginTopMm;
+                else if (type === 'centerY') item.yMm = (canvasHMm - item.hMm) / 2;
+                else if (type === 'bottom') item.yMm = canvasHMm - item.hMm - marginBottomMm;
 
                 if (elDom) {
                     elDom.classList.add('smooth-transition');
-                    if ((item.type === 'text' && item.curve !== 0) || item.type === 'group') {
+                    if ((item.type === 'text' && item.curve !== 0) || item.type === 'group' || (item.type === 'shape' && item.shapeType === 'freehand_path')) {
                         renderElementOnCanvas(item);
                     } else {
                         updateElementDOMTransform(elDom, item);
@@ -3475,13 +3635,12 @@
                 const minZ = Math.min(...elementsList.map(el => el.zIndex), 1);
                 item.zIndex = Math.max(1, minZ - 1);
             }
-
             elDom.style.zIndex = item.zIndex;
         }
 
+        // --- SISTEM DUPLIKASI & RESET ---
         function duplicateSelected() {
             if (selectedElementIds.length === 0) return;
-            
             const originalIds = [...selectedElementIds];
             selectElement(null);
 
@@ -3502,45 +3661,31 @@
                 renderElementOnCanvas(newItem);
                 selectElement(id, true);
             });
-
             syncActivePage();
-            showFloatingNotification(`Duplikasi berhasil untuk ${originalIds.length} objek.`);
         }
 
         function deleteSelected() {
             if (selectedElementIds.length === 0) return;
-            
             selectedElementIds.forEach(id => {
                 const domEl = document.getElementById(id);
                 if (domEl) domEl.remove();
-
                 const targetIndex = elementsList.findIndex(el => el.id === id);
-                if (targetIndex !== -1) {
-                    elementsList.splice(targetIndex, 1);
-                }
+                if (targetIndex !== -1) elementsList.splice(targetIndex, 1);
             });
-            
             selectElement(null);
             syncActivePage();
         }
 
         function resetCanvas(keepQuiet = false) {
             document.getElementById('canvas-items-container').innerHTML = '';
-            
-            // Mengosongkan isi array mutabel langsung
             elementsList.length = 0;
-            
             selectElement(null);
             syncActivePage();
-            
-            if (!keepQuiet) {
-                showFloatingNotification("Kanvas halaman aktif dikosongkan.");
-            }
+            if (!keepQuiet) showFloatingNotification("Kanvas dikosongkan.");
         }
 
         function loadSampleLayout() {
             resetCanvas(true);
-
             const demoPortraitImg = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop";
             const demoKtpImg = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop";
 
@@ -3601,9 +3746,7 @@
             const contentProps = document.getElementById('tab-content-properties');
 
             [btnPresets, btnShapes, btnProps].forEach(btn => {
-                if (btn) {
-                    btn.className = "flex-1 py-3 text-center text-xs font-semibold uppercase border-b-2 border-transparent text-gray-400 hover:text-white transition";
-                }
+                if (btn) btn.className = "flex-1 py-3 text-center text-xs font-semibold uppercase border-b-2 border-transparent text-gray-400 hover:text-white transition";
             });
             
             [contentPresets, contentShapes, contentProps].forEach(content => {
@@ -3624,7 +3767,6 @@
 
         function selectTool(tool) {
             currentTool = tool;
-
             document.querySelectorAll('.tool-btn').forEach(btn => {
                 btn.className = "w-11 h-11 hover:bg-editor-hover text-gray-300 rounded-lg flex flex-col items-center justify-center transition tool-btn";
             });
@@ -3634,27 +3776,29 @@
             }
 
             const canvasEl = document.getElementById('canvas');
+            const drawingToolbar = document.getElementById('drawing-toolbar');
+
             if (tool === 'draw') {
                 canvasEl.classList.add('drawing-cursor');
+                drawingToolbar.classList.remove('hidden');
                 selectElement(null);
                 currentDrawPoints = [];
-                updateDrawPreview();
-                showFloatingNotification("Mode menggambar manual aktif. Klik untuk membuat titik sudut, klik 2x untuk menyelesaikan.");
+                updateDrawPreviewStyle();
+                showFloatingNotification("Mode menggambar bebas aktif!");
             } else {
                 canvasEl.classList.remove('drawing-cursor');
+                drawingToolbar.classList.add('hidden');
                 currentDrawPoints = [];
-                updateDrawPreview();
+                const previewSvg = document.getElementById('draw-preview-svg');
+                if (previewSvg) previewSvg.classList.add('hidden');
             }
 
-            if (tool === 'shapes') {
-                switchTab('shapes');
-            }
+            if (tool === 'shapes') switchTab('shapes');
         }
 
         function updateMouseCoordsStatus(e) {
             const canvasEl = document.getElementById('canvas');
             const rect = canvasEl.getBoundingClientRect();
-            
             const xPx = e.clientX - rect.left;
             const yPx = e.clientY - rect.top;
 
@@ -3678,15 +3822,14 @@
             }
 
             const toast = document.createElement('div');
-            toast.className = "bg-zinc-900 border-l-4 border-editor-active text-gray-100 text-xs px-4 py-3 rounded-lg shadow-2xl flex items-center gap-2";
+            toast.className = "bg-zinc-900 border-l-4 border-editor-active text-gray-100 text-xs px-4 py-3 rounded-lg shadow-2xl flex items-center gap-2 pointer-events-auto animate-bounce-short";
             toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>${msg}</span>`;
             
             container.appendChild(toast);
-
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'transition-all', 'duration-500');
                 setTimeout(() => toast.remove(), 500);
-            }, 3500);
+            }, 3000);
         }
 
         function triggerPrint() {
@@ -3701,201 +3844,170 @@
             document.body.appendChild(printContainer);
 
             const baseCanvas = document.getElementById('canvas');
-            const widthStyle = baseCanvas.style.width;
-            const heightStyle = baseCanvas.style.height;
-
             pagesList.forEach((page, index) => {
                 const pageWrapper = document.createElement('div');
                 pageWrapper.className = 'print-page-break flex items-center justify-center';
-                pageWrapper.style.width = '100%';
-                pageWrapper.style.height = '100%';
-
+                
                 const canvasClone = baseCanvas.cloneNode(false);
                 canvasClone.id = `print-canvas-${index}`;
-                canvasClone.className = "relative bg-white text-black overflow-hidden"; 
-                canvasClone.style.width = widthStyle;
-                canvasClone.style.height = heightStyle;
-                canvasClone.style.transform = 'scale(1)'; 
-                canvasClone.style.margin = '0';
-                canvasClone.style.boxShadow = 'none';
-                canvasClone.style.border = 'none';
+                canvasClone.className = "relative bg-white text-black overflow-hidden";
+                canvasClone.style.transform = "none";
+                canvasClone.style.width = baseCanvas.style.width;
+                canvasClone.style.height = baseCanvas.style.height;
 
                 const itemsContainer = document.createElement('div');
                 itemsContainer.className = "absolute inset-0 w-full h-full";
-                canvasClone.appendChild(itemsContainer);
 
                 page.elements.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "absolute";
+                    const elClone = document.getElementById(item.id).cloneNode(true);
                     
-                    const wPx = item.wMm * MM_TO_PX;
-                    const hPx = item.hMm * MM_TO_PX;
-                    const xPx = item.xMm * MM_TO_PX;
-                    const yPx = item.yMm * MM_TO_PX;
-
-                    div.style.width = `${wPx}px`;
-                    div.style.height = `${hPx}px`;
-                    div.style.transform = `translate(${xPx}px, ${yPx}px) rotate(${item.angle}deg)`;
-                    div.style.opacity = item.opacity / 100;
-                    div.style.zIndex = item.zIndex;
-
-                    let innerContent = '';
-                    if (item.type === 'image') {
-                        innerContent = `<img src="${item.src}" class="w-full h-full object-cover rounded shadow-sm">`;
-                    } else if (item.type === 'text') {
-                        const styles = getComputedTextStyles(item);
-                        if (item.curve !== 0) {
-                            const cVal = item.curve;
-                            let startY, controlY, endY;
-                            if (cVal > 0) {
-                                startY = hPx * 0.85; endY = hPx * 0.85;
-                                controlY = hPx * 0.85 - (cVal / 100) * (hPx * 0.75);
-                            } else {
-                                startY = hPx * 0.15; endY = hPx * 0.15;
-                                controlY = hPx * 0.15 - (cVal / 100) * (hPx * 0.75);
-                            }
-                            const pathD = `M 5,${startY} Q ${wPx / 2},${controlY} ${wPx - 5},${endY}`;
-                            
-                            let textFill = item.textColor;
-                            let gradDefs = '';
-                            if (item.gradientEnabled) {
-                                textFill = `url(#grad-print-${index}-${item.id})`;
-                                gradDefs = `
-                                    <linearGradient id="grad-print-${index}-${item.id}" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" style="stop-color:${item.textColor}; stop-opacity:1" />
-                                        <stop offset="100%" style="stop-color:${item.gradientColor2}; stop-opacity:1" />
-                                    </linearGradient>
-                                `;
-                            }
-
-                            innerContent = `
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <svg width="100%" height="100%" viewBox="0 0 ${wPx} ${hPx}" class="overflow-visible">
-                                        <defs>
-                                            ${gradDefs}
-                                            <path id="curve-path-print-${index}-${item.id}" d="${pathD}" fill="transparent" />
-                                        </defs>
-                                        <text text-anchor="middle" dominant-baseline="central"
-                                              style="font-family: ${item.fontFamily}, sans-serif; font-size: ${item.fontSize}px; font-weight: ${item.fontWeight}; font-style: ${item.fontStyle}; text-shadow: ${styles.textShadow};"
-                                              fill="${textFill}" stroke="${item.strokeColor}" stroke-width="${item.strokeWidth}" paint-order="stroke fill">
-                                            <textPath href="#curve-path-print-${index}-${item.id}" startOffset="50%">${item.text}</textPath>
-                                        </text>
-                                    </svg>
-                                </div>
-                            `;
-                        } else {
-                            const isGrad = item.gradientEnabled;
-                            const fillStyle = isGrad ? `background: linear-gradient(${item.gradientAngle}, ${item.textColor}, ${item.gradientColor2}); -webkit-background-clip: text; -webkit-text-fill-color: transparent;` : `color: ${item.textColor};`;
-                            innerContent = `
-                                <div class="w-full h-full flex items-center justify-center font-bold text-center leading-none" 
-                                     style="font-family: ${item.fontFamily}, sans-serif; font-size: ${item.fontSize}px; font-style: ${item.fontStyle}; font-weight: ${item.fontWeight}; text-shadow: ${styles.textShadow}; -webkit-text-stroke: ${item.strokeWidth}px ${item.strokeColor}; ${fillStyle}">
-                                    ${item.text}
-                                </div>
-                            `;
-                        }
-                    } else if (item.type === 'shape') {
-                        let shapeContent = item.shapeType === 'custom_path' ? `<svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none"><polygon points="${item.points}" /></svg>` : getShapeSVG(item.shapeType);
-                        innerContent = `<div class="w-full h-full" style="color: ${item.color}; fill: currentColor; stroke: ${item.strokeColor}; stroke-width: ${item.strokeWidth}px;">${shapeContent}</div>`;
-                    } else if (item.type === 'group') {
-                        innerContent = getGroupInnerContent(item);
-                    }
-
-                    div.innerHTML = innerContent;
-                    itemsContainer.appendChild(div);
+                    const handles = elClone.querySelectorAll('.resize-handle, .rotate-handle, .rotate-line, .selection-border');
+                    handles.forEach(h => h.remove());
+                    
+                    itemsContainer.appendChild(elClone);
                 });
 
+                canvasClone.appendChild(itemsContainer);
                 pageWrapper.appendChild(canvasClone);
                 printContainer.appendChild(pageWrapper);
             });
 
-            setTimeout(() => {
-                window.print();
-            }, 400);
+            window.print();
         }
 
         function toggleDownloadDropdown() {
-            const dropdown = document.getElementById('download-dropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('hidden');
-            }
+            document.getElementById('download-dropdown').classList.toggle('hidden');
         }
 
+        function exportCanvas(format) {
+            selectElement(null);
+            toggleDownloadDropdown();
+            showFloatingNotification("Sedang memproses unduhan berkualitas tinggi...");
+
+            const canvasEl = document.getElementById('canvas');
+            const origTransform = canvasEl.style.transform;
+            canvasEl.style.transform = "none";
+
+            setTimeout(() => {
+                html2canvas(canvasEl, {
+                    scale: 3.125, 
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: format === 'png' ? null : '#ffffff'
+                }).then(renderedCanvas => {
+                    canvasEl.style.transform = origTransform;
+                    
+                    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                    const ext = format === 'png' ? 'png' : 'jpg';
+                    const dataUrl = renderedCanvas.toDataURL(mimeType, 0.95);
+                    
+                    const link = document.createElement('a');
+                    link.download = `Cetak_Foto_${pagesList[activePageIndex].name}.${ext}`;
+                    link.href = dataUrl;
+                    link.click();
+                    showFloatingNotification("Desain berhasil disimpan ke komputer!");
+                }).catch(err => {
+                    canvasEl.style.transform = origTransform;
+                    showFloatingNotification("Gagal mengekspor foto, coba kembali.");
+                });
+            }, 300);
+        }
+
+        // --- SISTEM PEMOTONG FOTO (CROPPER) ---
+        let originalCropImageSrc = "";
+        
         function openCropModal() {
             if (!selectedElementId) return;
             const item = elementsList.find(el => el.id === selectedElementId);
             if (item.type !== 'image') return;
 
-            const modal = document.getElementById('crop-modal');
+            originalCropImageSrc = item.originalSrc || item.src;
             const targetImg = document.getElementById('crop-target-img');
-            
-            if (!item.originalSrc) {
-                item.originalSrc = item.src;
-            }
-
-            targetImg.src = item.originalSrc;
-            modal.classList.remove('hidden');
+            targetImg.src = originalCropImageSrc;
 
             document.getElementById('crop-aspect-select').value = 'free';
             cropAspectRatio = 'free';
 
-            setTimeout(() => {
-                const container = document.getElementById('crop-workspace-container');
-                container.style.width = `${targetImg.clientWidth}px`;
-                container.style.height = `${targetImg.clientHeight}px`;
-                
-                const initialW = targetImg.clientWidth * 0.8;
-                const initialH = targetImg.clientHeight * 0.8;
-                const initialX = (targetImg.clientWidth - initialW) / 2;
-                const initialY = (targetImg.clientHeight - initialH) / 2;
+            const modal = document.getElementById('crop-modal');
+            modal.classList.remove('hidden');
 
-                const cropBox = document.getElementById('crop-box');
-                cropBox.style.left = `${initialX}px`;
-                cropBox.style.top = `${initialY}px`;
-                cropBox.style.width = `${initialW}px`;
-                cropBox.style.height = `${initialH}px`;
-
-                setupCropperListeners();
-            }, 150);
+            targetImg.onload = function() {
+                resetCropToOriginal();
+            };
         }
 
         function closeCropModal() {
             document.getElementById('crop-modal').classList.add('hidden');
         }
 
-        function setupCropperListeners() {
+        function resetCropToOriginal() {
             const cropBox = document.getElementById('crop-box');
-            cropBox.onpointerdown = null;
-
-            cropBox.addEventListener('pointerdown', function(e) {
-                const handle = e.target.getAttribute('data-handle');
-                e.stopPropagation();
-                e.preventDefault();
-
-                cropStartMouseX = e.clientX;
-                cropStartMouseY = e.clientY;
-                cropStartBoxX = parseFloat(cropBox.style.left) || 0;
-                cropStartBoxY = parseFloat(cropBox.style.top) || 0;
-                cropStartBoxW = parseFloat(cropBox.style.width) || 100;
-                cropStartBoxH = parseFloat(cropBox.style.height) || 100;
-
-                if (handle) {
-                    isCropperResizing = true;
-                    activeCropHandle = handle;
-                } else {
-                    isCropperDragging = true;
-                }
-            });
+            cropBox.style.top = "10%";
+            cropBox.style.left = "10%";
+            cropBox.style.width = "80%";
+            cropBox.style.height = "80%";
         }
+
+        function setCropAspect() {
+            cropAspectRatio = document.getElementById('crop-aspect-select').value;
+            const cropBox = document.getElementById('crop-box');
+            const targetImg = document.getElementById('crop-target-img');
+            const containerW = targetImg.clientWidth;
+            const containerH = targetImg.clientHeight;
+
+            if (cropAspectRatio === 'free') return;
+
+            let ratio = 1;
+            if (cropAspectRatio === '1:1') ratio = 1;
+            else if (cropAspectRatio === '3:4') ratio = 3/4;
+            else if (cropAspectRatio === '2:3') ratio = 2/3;
+            else if (cropAspectRatio === '4:6') ratio = 4/6;
+            else if (cropAspectRatio === '16:9') ratio = 16/9;
+
+            let newW = containerW * 0.8;
+            let newH = newW / ratio;
+
+            if (newH > containerH * 0.8) {
+                newH = containerH * 0.8;
+                newW = newH * ratio;
+            }
+
+            cropBox.style.width = `${(newW / containerW) * 100}%`;
+            cropBox.style.height = `${(newH / containerH) * 100}%`;
+            cropBox.style.left = `${((containerW - newW) / 2 / containerW) * 100}%`;
+            cropBox.style.top = `${((containerH - newH) / 2 / containerH) * 100}%`;
+        }
+
+        const cropBox = document.getElementById('crop-box');
+        cropBox.addEventListener('pointerdown', function(e) {
+            const handle = e.target.getAttribute('data-handle');
+            e.stopPropagation();
+            
+            const targetImg = document.getElementById('crop-target-img');
+            const containerW = targetImg.clientWidth;
+            const containerH = targetImg.clientHeight;
+
+            cropStartMouseX = e.clientX;
+            cropStartMouseY = e.clientY;
+            
+            cropStartBoxX = (parseFloat(cropBox.style.left) / 100) * containerW;
+            cropStartBoxY = (parseFloat(cropBox.style.top) / 100) * containerH;
+            cropStartBoxW = (parseFloat(cropBox.style.width) / 100) * containerW;
+            cropStartBoxH = (parseFloat(cropBox.style.height) / 100) * containerH;
+
+            if (handle) {
+                isCropperResizing = true;
+                activeCropHandle = handle;
+            } else {
+                isCropperDragging = true;
+            }
+        });
 
         function onCropperPointerMove(e) {
             if (!isCropperDragging && !isCropperResizing) return;
-
-            const container = document.getElementById('crop-workspace-container');
-            const cropBox = document.getElementById('crop-box');
-            
-            const rect = container.getBoundingClientRect();
-            const containerW = rect.width;
-            const containerH = rect.height;
+            const targetImg = document.getElementById('crop-target-img');
+            const containerW = targetImg.clientWidth;
+            const containerH = targetImg.clientHeight;
 
             const dx = e.clientX - cropStartMouseX;
             const dy = e.clientY - cropStartMouseY;
@@ -3907,8 +4019,8 @@
                 newX = Math.max(0, Math.min(containerW - cropStartBoxW, newX));
                 newY = Math.max(0, Math.min(containerH - cropStartBoxH, newY));
 
-                cropBox.style.left = `${newX}px`;
-                cropBox.style.top = `${newY}px`;
+                cropBox.style.left = `${(newX / containerW) * 100}%`;
+                cropBox.style.top = `${(newY / containerH) * 100}%`;
             } 
             else if (isCropperResizing) {
                 let newW = cropStartBoxW;
@@ -3916,127 +4028,60 @@
                 let newX = cropStartBoxX;
                 let newY = cropStartBoxY;
 
-                let ratio = null;
-                if (cropAspectRatio !== 'free') {
-                    const parts = cropAspectRatio.split(':');
-                    ratio = parseFloat(parts[0]) / parseFloat(parts[1]);
-                }
+                let ratio = 1;
+                const isRatioLocked = cropAspectRatio !== 'free';
+
+                if (cropAspectRatio === '1:1') ratio = 1;
+                else if (cropAspectRatio === '3:4') ratio = 3/4;
+                else if (cropAspectRatio === '2:3') ratio = 2/3;
+                else if (cropAspectRatio === '4:6') ratio = 4/6;
+                else if (cropAspectRatio === '16:9') ratio = 16/9;
 
                 if (activeCropHandle === 'br') {
                     newW = cropStartBoxW + dx;
-                    newH = cropStartBoxH + dy;
-
-                    if (ratio) {
-                        if (Math.abs(dx) > Math.abs(dy)) {
-                            newH = newW / ratio;
-                        } else {
-                            newW = newH * ratio;
-                        }
-                    }
-
-                    if (newX + newW > containerW) {
-                        newW = containerW - newX;
-                        if (ratio) newH = newW / ratio;
-                    }
-                    if (newY + newH > containerH) {
-                        newH = containerH - newY;
-                        if (ratio) newW = newH * ratio;
+                    if (isRatioLocked) {
+                        newH = newW / ratio;
+                    } else {
+                        newH = cropStartBoxH + dy;
                     }
                 } 
                 else if (activeCropHandle === 'bl') {
                     newW = cropStartBoxW - dx;
-                    newH = cropStartBoxH + dy;
                     newX = cropStartBoxX + dx;
-
-                    if (ratio) {
-                        if (Math.abs(dx) > Math.abs(dy)) {
-                            newH = newW / ratio;
-                        } else {
-                            newW = newH * ratio;
-                            newX = cropStartBoxX + (cropStartBoxW - newW);
-                        }
+                    if (isRatioLocked) {
+                        newH = newW / ratio;
+                    } else {
+                        newH = cropStartBoxH + dy;
                     }
-
-                    if (newX < 0) {
-                        newX = 0;
-                        newW = cropStartBoxX + cropStartBoxW;
-                        if (ratio) newH = newW / ratio;
-                    }
-                    if (newY + newH > containerH) {
-                        newH = containerH - newY;
-                        if (ratio) {
-                            newW = newH * ratio;
-                            newX = cropStartBoxX + (cropStartBoxW - newW);
-                        }
-                    }
-                }
+                } 
                 else if (activeCropHandle === 'tr') {
                     newW = cropStartBoxW + dx;
-                    newH = cropStartBoxH - dy;
-                    newY = cropStartBoxY + dy;
-
-                    if (ratio) {
-                        if (Math.abs(dx) > Math.abs(dy)) {
-                            newH = newW / ratio;
-                            newY = cropStartBoxY + (cropStartBoxH - newH);
-                        } else {
-                            newW = newH * ratio;
-                        }
+                    if (isRatioLocked) {
+                        newH = newW / ratio;
+                        newY = cropStartBoxY - (newH - cropStartBoxH);
+                    } else {
+                        newH = cropStartBoxH - dy;
+                        newY = cropStartBoxY + dy;
                     }
-
-                    if (newX + newW > containerW) {
-                        newW = containerW - newX;
-                        if (ratio) {
-                            newH = newW / ratio;
-                            newY = cropStartBoxY + (cropStartBoxH - newH);
-                        }
-                    }
-                    if (newY < 0) {
-                        newY = 0;
-                        newH = cropStartBoxY + cropStartBoxH;
-                        if (ratio) newW = newH * ratio;
-                    }
-                }
+                } 
                 else if (activeCropHandle === 'tl') {
                     newW = cropStartBoxW - dx;
-                    newH = cropStartBoxH - dy;
                     newX = cropStartBoxX + dx;
-                    newY = cropStartBoxY + dy;
-
-                    if (ratio) {
-                        if (Math.abs(dx) > Math.abs(dy)) {
-                            newH = newW / ratio;
-                            newY = cropStartBoxY + (cropStartBoxH - newH);
-                        } else {
-                            newW = newH * ratio;
-                            newX = cropStartBoxX + (cropStartBoxW - newW);
-                        }
-                    }
-
-                    if (newX < 0) {
-                        newX = 0;
-                        newW = cropStartBoxX + cropStartBoxW;
-                        if (ratio) {
-                            newH = newW / ratio;
-                            newY = cropStartBoxY + (cropStartBoxH - newH);
-                        }
-                    }
-                    if (newY < 0) {
-                        newY = 0;
-                        newH = cropStartBoxY + cropStartBoxH;
-                        if (ratio) {
-                            newW = newH * ratio;
-                            newX = cropStartBoxX + (cropStartBoxW - newW);
-                        }
+                    if (isRatioLocked) {
+                        newH = newW / ratio;
+                        newY = cropStartBoxY - (newH - cropStartBoxH);
+                    } else {
+                        newH = cropStartBoxH - dy;
+                        newY = cropStartBoxY + dy;
                     }
                 }
 
-                const minCropSize = 20;
-                if (newW >= minCropSize && newH >= minCropSize) {
-                    cropBox.style.width = `${newW}px`;
-                    cropBox.style.height = `${newH}px`;
-                    cropBox.style.left = `${newX}px`;
-                    cropBox.style.top = `${newY}px`;
+                const minSize = 25;
+                if (newW >= minSize && newH >= minSize && newX >= 0 && (newX + newW) <= containerW && newY >= 0 && (newY + newH) <= containerH) {
+                    cropBox.style.width = `${(newW / containerW) * 100}%`;
+                    cropBox.style.height = `${(newH / containerH) * 100}%`;
+                    cropBox.style.left = `${(newX / containerW) * 100}%`;
+                    cropBox.style.top = `${(newY / containerH) * 100}%`;
                 }
             }
         }
@@ -4047,86 +4092,46 @@
             activeCropHandle = null;
         }
 
-        function setCropAspect() {
-            cropAspectRatio = document.getElementById('crop-aspect-select').value;
-            if (cropAspectRatio === 'free') return;
-
-            const parts = cropAspectRatio.split(':');
-            const ratio = parseFloat(parts[0]) / parseFloat(parts[1]);
-
-            const cropBox = document.getElementById('crop-box');
-            const container = document.getElementById('crop-workspace-container');
-            const containerW = container.clientWidth;
-            const containerH = container.clientHeight;
-
-            let currentX = parseFloat(cropBox.style.left) || 0;
-            let currentY = parseFloat(cropBox.style.top) || 0;
-            let newW = parseFloat(cropBox.style.width) || 100;
-            let newH = newW / ratio;
-
-            if (currentY + newH > containerH) {
-                newH = containerH - currentY;
-                newW = newH * ratio;
-            }
-            if (currentX + newW > containerW) {
-                newW = containerW - currentX;
-                newH = newW / ratio;
-            }
-
-            cropBox.style.width = `${newW}px`;
-            cropBox.style.height = `${newH}px`;
-        }
-
         function applyCropAction() {
-            if (!selectedElementId) return;
-            const item = elementsList.find(el => el.id === selectedElementId);
-            if (item.type !== 'image') return;
-
             const targetImg = document.getElementById('crop-target-img');
-            const cropBox = document.getElementById('crop-box');
+            const containerW = targetImg.clientWidth;
+            const containerH = targetImg.clientHeight;
 
-            const naturalW = targetImg.naturalWidth;
-            const naturalH = targetImg.naturalHeight;
-            const clientW = targetImg.clientWidth;
-            const clientH = targetImg.clientHeight;
+            const boxXPercent = parseFloat(cropBox.style.left) / 100;
+            const boxYPercent = parseFloat(cropBox.style.top) / 100;
+            const boxWPercent = parseFloat(cropBox.style.width) / 100;
+            const boxHPercent = parseFloat(cropBox.style.height) / 100;
 
-            const scaleX = naturalW / clientW;
-            const scaleY = naturalH / clientH;
-
-            const cropLeft = parseFloat(cropBox.style.left) * scaleX;
-            const cropTop = parseFloat(cropBox.style.top) * scaleY;
-            const cropWidth = parseFloat(cropBox.style.width) * scaleX;
-            const cropHeight = parseFloat(cropBox.style.height) * scaleY;
-
-            if (cropWidth <= 1 || cropHeight <= 1) {
-                showFloatingNotification("Potongan terlalu kecil.");
-                return;
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = cropWidth;
-            canvas.height = cropHeight;
-            const ctx = canvas.getContext('2d');
-
-            ctx.drawImage(
-                targetImg,
-                cropLeft, cropTop, cropWidth, cropHeight,
-                0, 0, cropWidth, cropHeight
-            );
-
-            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
-            item.src = croppedDataUrl;
+            const img = new Image();
+            img.src = originalCropImageSrc;
             
-            const newAspect = cropWidth / cropHeight;
-            item.aspectRatio = newAspect;
-            item.hMm = item.wMm / newAspect; 
+            img.onload = function() {
+                const nativeW = img.naturalWidth;
+                const nativeH = img.naturalHeight;
 
-            renderElementOnCanvas(item);
-            selectElement(item.id);
+                const sx = boxXPercent * nativeW;
+                const sy = boxYPercent * nativeH;
+                const sw = boxWPercent * nativeW;
+                const sh = boxHPercent * nativeH;
 
-            closeCropModal();
-            showFloatingNotification("Gambar berhasil dipotong (cropped)!");
+                const canvas = document.createElement('canvas');
+                canvas.width = sw;
+                canvas.height = sh;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+                const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                const item = elementsList.find(el => el.id === selectedElementId);
+                
+                item.src = croppedDataUrl;
+                item.aspectRatio = sw / sh;
+
+                renderElementOnCanvas(item);
+                closeCropModal();
+                syncActivePage();
+                showFloatingNotification("Foto berhasil dipotong!");
+            };
         }
 
         function resetSelectedImageCrop() {
@@ -4134,97 +4139,18 @@
             const item = elementsList.find(el => el.id === selectedElementId);
             if (item.type !== 'image') return;
 
-            if (item.originalSrc && item.src !== item.originalSrc) {
-                const tempImg = new Image();
-                tempImg.onload = function() {
-                    const aspect = tempImg.naturalWidth / tempImg.naturalHeight;
-                    item.src = item.originalSrc;
-                    item.aspectRatio = aspect;
-                    item.hMm = item.wMm / aspect;
-
-                    renderElementOnCanvas(item);
-                    selectElement(item.id);
-                    showFloatingNotification("Foto dikembalikan ke ukuran asli!");
-                };
-                tempImg.src = item.originalSrc;
-            } else {
-                showFloatingNotification("Foto ini sudah dalam kondisi asli.");
-            }
-        }
-
-        async function exportCanvas(format) {
-            const canvasEl = document.getElementById('canvas');
-            if (!canvasEl) return;
-
-            document.getElementById('download-dropdown').classList.add('hidden');
-            showFloatingNotification(`Sedang memproses ekspor halaman aktif ke ${format.toUpperCase()} (3x Retina Scale)...`);
-
-            const originalSelection = [...selectedElementIds];
-            const originalGridChecked = document.getElementById('toggle-grid-checkbox').checked;
-            const originalMarginShow = showMarginGuides;
-
-            selectElement(null);
-            canvasEl.classList.remove('canvas-grid', 'canvas-grid-sub');
-
-            const guideBox = document.getElementById('margin-guide-box');
-            if (guideBox) guideBox.style.display = 'none';
-
-            const trLayer = document.getElementById('tracing-template-layer');
-            let tracingWasVisible = false;
-            if (trLayer && !trLayer.classList.contains('hidden')) {
-                trLayer.classList.add('hidden');
-                tracingWasVisible = true;
-            }
-
-            const options = {
-                scale: 3, 
-                useCORS: true, 
-                allowTaint: true,
-                backgroundColor: format === 'png' ? null : '#ffffff', 
-                logging: false
+            item.src = item.originalSrc;
+            const tempImg = new Image();
+            
+            tempImg.onload = function() {
+                item.aspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
+                item.hMm = item.wMm / item.aspectRatio;
+                renderElementOnCanvas(item);
+                fillPropertyInputs(item);
+                syncActivePage();
+                showFloatingNotification("Potongan foto berhasil direset!");
             };
-
-            try {
-                await new Promise(resolve => setTimeout(resolve, 200));
-
-                const canvasGenerated = await html2canvas(canvasEl, options);
-                
-                let fileExtension = format;
-                let mimeType = 'image/png';
-                if (format === 'jpg') {
-                    mimeType = 'image/jpeg';
-                    fileExtension = 'jpg';
-                }
-
-                const dataUrl = canvasGenerated.toDataURL(mimeType, 0.95);
-
-                const link = document.createElement('a');
-                const pageNameClean = pagesList[activePageIndex].name.replace(/\s+/g, '_');
-                link.download = `CorelPrint_${pageNameClean}.${fileExtension}`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                showFloatingNotification(`Berhasil mengunduh "${pagesList[activePageIndex].name}" format ${format.toUpperCase()}!`);
-            } catch (error) {
-                console.error("Export Error: ", error);
-                showFloatingNotification("Gagal mengekspor kanvas.");
-            } finally {
-                // Puluhkan kondisi UI editor semula setelah ekspor selesai
-                originalSelection.forEach(id => {
-                    selectElement(id, true);
-                });
-                if (originalGridChecked) {
-                    canvasEl.classList.add('canvas-grid', 'canvas-grid-sub');
-                }
-                if (originalMarginShow) {
-                    if (guideBox) guideBox.style.display = 'block';
-                }
-                if (tracingWasVisible && trLayer) {
-                    trLayer.classList.remove('hidden');
-                }
-            }
+            tempImg.src = item.originalSrc;
         }
     </script>
 </body>
