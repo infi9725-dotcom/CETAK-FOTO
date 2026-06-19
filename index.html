@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAMI COLLECTION</title>
+    <title>FM</title>
     
     <!-- Favicon dengan Logo -->
     <link class="no-print" rel="icon" type="image/png" href="https://iili.io/CCIOBUl.png" onerror="this.onerror=null; this.href='https://iili.io/CCIOBUl.th.png';">
@@ -1611,12 +1611,23 @@
                 }
             }
 
-            // 3. Tampilkan Overlay "Aplikasi Ditutup" Secara Estetik
-            const exitOverlay = document.getElementById('exit-application-overlay');
-            if (exitOverlay) {
-                exitOverlay.classList.remove('hidden');
-            }
-            showFloatingNotification("Aplikasi FAMI-COLLECTION berhasil ditutup.");
+            showFloatingNotification("Menutup Aplikasi...");
+
+            // 3. Proses penutupan langsung tab/jendela website aplikasi (Desktop-like Exit)
+            setTimeout(() => {
+                // Mencoba metode standard penutupan jendela browser
+                window.close();
+                
+                // Trik/Bypass khusus agar tab utama diizinkan ditutup paksa oleh script browser
+                window.open('', '_self', '');
+                window.close();
+                
+                // Jika browser masih memblokir karena batasan keamanan ketat,
+                // langsung alihkan ke halaman kosong murni (about:blank) agar halaman langsung "menghilang"
+                setTimeout(() => {
+                    window.location.href = "about:blank";
+                }, 100);
+            }, 300);
         }
 
         function restartApplication() {
