@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>FM FOTO</title>
     
     <!-- Favicon dengan Logo -->
     <link class="no-print" rel="icon" type="image/png" href="https://iili.io/CCIOBUl.png" onerror="this.onerror=null; this.href='https://iili.io/CCIOBUl.th.png';">
@@ -351,10 +351,33 @@
                 </label>
             </div>
 
-            <!-- Tombol Tambah Halaman -->
-            <button onclick="addNewPage()" class="bg-editor-active hover:bg-blue-600 text-white font-bold px-3 py-1 rounded transition flex items-center gap-1 shadow-md text-xs" title="Tambah Halaman Baru">
-                <i class="fa-solid fa-plus"></i> Tambah Halaman
-            </button>
+            <div class="h-5 w-px bg-editor-border shrink-0"></div>
+
+            <!-- NAVIGASI HALAMAN (DIPINDAHKAN KE ATAS NAVBAR AGAR TIDAK MENGGANNGU KANVAS) -->
+            <div class="flex items-center space-x-1 bg-editor-bg border border-editor-border rounded-lg p-1 shrink-0">
+                <button onclick="prevPage()" class="w-7 h-7 text-gray-400 hover:text-white hover:bg-editor-hover rounded flex items-center justify-center transition" title="Halaman Sebelumnya">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+                
+                <!-- Container Tab Halaman Dinamis -->
+                <div id="pages-container" class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none py-0.5 max-w-[160px] md:max-w-[320px]">
+                    <!-- Tabs dimasukkan via JS -->
+                </div>
+
+                <button onclick="nextPage()" class="w-7 h-7 text-gray-400 hover:text-white hover:bg-editor-hover rounded flex items-center justify-center transition" title="Halaman Berikutnya">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+
+                <div class="h-4 w-px bg-editor-border mx-0.5"></div>
+
+                <button onclick="addNewPage()" class="px-2.5 py-1 bg-editor-active hover:bg-blue-600 text-white font-bold rounded transition flex items-center gap-1 text-xs" title="Tambah Halaman Baru">
+                    <i class="fa-solid fa-plus text-xs"></i> Tambah Halaman
+                </button>
+
+                <button onclick="deleteCurrentPage()" class="w-7 h-7 text-rose-400 hover:text-rose-300 hover:bg-rose-950/50 rounded flex items-center justify-center transition" title="Hapus Halaman Aktif">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            </div>
         </div>
 
         <div class="flex items-center space-x-4 shrink-0">
@@ -537,27 +560,6 @@
 
         </section>
 
-        <!-- FLOATING PAGE MANAGER CONTROLLER (CorelDRAW Style) -->
-        <div class="no-print absolute bottom-12 left-1/2 -translate-x-1/2 bg-editor-panel/95 backdrop-blur-md border border-editor-border rounded-full px-4 py-2 flex items-center space-x-3 shadow-2xl z-30 max-w-[90%] overflow-hidden">
-            <button onclick="prevPage()" class="w-8 h-8 text-gray-400 hover:text-white hover:bg-editor-hover rounded-full flex items-center justify-center transition" title="Halaman Sebelumnya">
-                <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            
-            <!-- Dynamic Page Tabs Container -->
-            <div id="pages-container" class="flex items-center space-x-1.5 overflow-x-auto scrollbar-none py-1 max-w-[240px] md:max-w-[480px]">
-                <!-- Tabs akan dimasukkan lewat js -->
-            </div>
-
-            <button onclick="nextPage()" class="w-8 h-8 text-gray-400 hover:text-white hover:bg-editor-hover rounded-full flex items-center justify-center transition" title="Halaman Berikutnya">
-                <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-            <div class="h-5 w-px bg-editor-border"></div>
-            
-            <button onclick="deleteCurrentPage()" class="w-8 h-8 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-full flex items-center justify-center transition" title="Hapus Halaman Aktif">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-        </div>
-
         <!-- Kanan: Sidebar Inspector Panel -->
         <aside class="no-print w-80 bg-editor-panel border-l border-editor-border flex flex-col h-full z-20 min-h-0 shrink-0">
             
@@ -609,20 +611,29 @@
                             <span class="text-[10px] text-gray-500 font-normal">ID Card</span>
                         </h3>
                         <div class="space-y-2">
-                            <button onclick="applyPresetToSelectedOrNew(85.6, 53.98, 'KTP / ID Card Standard')" class="w-full bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover p-2.5 rounded text-left transition flex justify-between items-center">
-                                <div>
-                                    <span class="block text-sm font-bold text-white">KTP / SIM / Kartu Kredit</span>
-                                    <span class="text-xs text-gray-400">ISO 7810 ID-1 standard</span>
-                                </div>
-                                <span class="text-xs font-semibold text-emerald-400 px-2 py-0.5 bg-emerald-950 border border-emerald-900 rounded">85.6 x 53.9 mm</span>
-                            </button>
-                            <button onclick="applyPresetToSelectedOrNew(90, 55, 'Kartu Nama')" class="w-full bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover p-2.5 rounded text-left transition flex justify-between items-center">
-                                <div>
-                                    <span class="block text-sm font-bold text-white">Kartu Nama Standard</span>
-                                    <span class="text-xs text-gray-400">Ukuran kartu nama bisnis</span>
-                                </div>
-                                <span class="text-xs font-semibold text-emerald-400 px-2 py-0.5 bg-emerald-950 border border-emerald-900 rounded">90 x 55 mm</span>
-                            </button>
+                            <!-- KTP / SIM / Kartu Kredit (Lanskap & Potret) -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="applyPresetToSelectedOrNew(85.6, 53.98, 'KTP / ID Card Lanskap')" class="w-full bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover p-2.5 rounded text-left transition">
+                                    <span class="block text-xs font-bold text-white truncate">KTP / SIM (Lanskap)</span>
+                                    <span class="text-[10px] text-gray-400 block mt-0.5">85.6 x 53.9 mm</span>
+                                </button>
+                                <button onclick="applyPresetToSelectedOrNew(53.98, 85.6, 'KTP / ID Card Potret')" class="w-full bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover p-2.5 rounded text-left transition">
+                                    <span class="block text-xs font-bold text-white truncate">KTP / SIM (Potret)</span>
+                                    <span class="text-[10px] text-gray-400 block mt-0.5">53.9 x 85.6 mm</span>
+                                </button>
+                            </div>
+
+                            <!-- Kartu Nama Business Card (Lanskap & Potret) -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="applyPresetToSelectedOrNew(90, 55, 'Kartu Nama Lanskap')" class="w-full bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover p-2.5 rounded text-left transition">
+                                    <span class="block text-xs font-bold text-white truncate">Kartu Nama (Lanskap)</span>
+                                    <span class="text-[10px] text-gray-400 block mt-0.5">90 x 55 mm</span>
+                                </button>
+                                <button onclick="applyPresetToSelectedOrNew(55, 90, 'Kartu Nama Potret')" class="w-full bg-editor-bg border border-editor-border hover:border-editor-active hover:bg-editor-hover p-2.5 rounded text-left transition">
+                                    <span class="block text-xs font-bold text-white truncate">Kartu Nama (Potret)</span>
+                                    <span class="text-[10px] text-gray-400 block mt-0.5">55 x 90 mm</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -692,6 +703,42 @@
                         <button onclick="autoFillSelected()" class="w-full bg-editor-active hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
                             <i class="fa-solid fa-boxes-stacked"></i> Auto Fill Halaman Penuh
                         </button>
+                    </div>
+
+                    <!-- 5. INPUT UKURAN KUSTOM FOTO & KARTU -->
+                    <div class="border-t border-editor-border pt-4 space-y-3">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                            <span><i class="fa-solid fa-ruler-combined text-cyan-400 mr-1.5"></i> Ukuran Kustom Foto / Kartu</span>
+                            <span class="text-[10px] text-gray-500 font-normal">Custom</span>
+                        </h3>
+                        <div class="space-y-2">
+                            <div class="grid grid-cols-3 gap-2 items-center">
+                                <div>
+                                    <label class="block text-[10px] text-gray-400 mb-0.5">Lebar:</label>
+                                    <input type="number" id="preset-custom-w" value="53.98" step="0.01" min="0.1" class="w-full bg-editor-bg border border-editor-border text-white text-xs px-2 py-1.5 rounded outline-none focus:border-editor-active">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-gray-400 mb-0.5">Tinggi:</label>
+                                    <input type="number" id="preset-custom-h" value="85.6" step="0.01" min="0.1" class="w-full bg-editor-bg border border-editor-border text-white text-xs px-2 py-1.5 rounded outline-none focus:border-editor-active">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-gray-400 mb-0.5">Satuan:</label>
+                                    <select id="preset-custom-unit" class="w-full bg-editor-bg border border-editor-border text-white text-xs px-1 py-1.5 rounded outline-none focus:border-editor-active cursor-pointer">
+                                        <option value="mm">mm</option>
+                                        <option value="cm">cm</option>
+                                        <option value="inch">inch</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <button onclick="applyCustomElementPreset('selected')" class="w-full bg-editor-bg border border-editor-border hover:border-cyan-500 hover:bg-editor-hover text-white text-xs py-2 rounded transition flex items-center justify-center gap-1" title="Terapkan ukuran kustom ke foto/kartu terpilih">
+                                    <i class="fa-solid fa-check text-cyan-400"></i> Set Terpilih
+                                </button>
+                                <button onclick="applyCustomElementPreset('new')" class="w-full bg-editor-bg border border-editor-border hover:border-emerald-500 hover:bg-editor-hover text-white text-xs py-2 rounded transition flex items-center justify-center gap-1" title="Buat bingkai cetak kustom baru">
+                                    <i class="fa-solid fa-plus text-emerald-400"></i> Buat Bingkai
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -1611,12 +1658,23 @@
                 }
             }
 
-            // 3. Tampilkan Overlay "Aplikasi Ditutup" Secara Estetik
-            const exitOverlay = document.getElementById('exit-application-overlay');
-            if (exitOverlay) {
-                exitOverlay.classList.remove('hidden');
-            }
-            showFloatingNotification("Aplikasi FAMI-COLLECTION berhasil ditutup.");
+            showFloatingNotification("Menutup Aplikasi...");
+
+            // 3. Proses penutupan langsung tab/jendela website aplikasi (Desktop-like Exit)
+            setTimeout(() => {
+                // Mencoba metode standard penutupan jendela browser
+                window.close();
+                
+                // Trik/Bypass khusus agar tab utama diizinkan ditutup paksa oleh script browser
+                window.open('', '_self', '');
+                window.close();
+                
+                // Jika browser masih memblokir karena batasan keamanan ketat,
+                // langsung alihkan ke halaman kosong murni (about:blank) agar halaman langsung "menghilang"
+                setTimeout(() => {
+                    window.location.href = "about:blank";
+                }, 100);
+            }, 300);
         }
 
         function restartApplication() {
@@ -3473,6 +3531,67 @@
             } else {
                 showFloatingNotification("Silakan klik foto atau teks terlebih dahulu.");
             }
+        }
+
+        function applyCustomElementPreset(mode) {
+            const wVal = parseFloat(document.getElementById('preset-custom-w').value) || 0;
+            const hVal = parseFloat(document.getElementById('preset-custom-h').value) || 0;
+            const unit = document.getElementById('preset-custom-unit').value;
+
+            if (wVal <= 0 || hVal <= 0) {
+                showFloatingNotification("Ukuran tidak valid! Masukkan angka lebih dari 0.");
+                return;
+            }
+
+            let wMm = wVal;
+            let hMm = hVal;
+
+            if (unit === 'cm') {
+                wMm = wVal * 10;
+                hMm = hVal * 10;
+            } else if (unit === 'inch') {
+                wMm = wVal * 25.4;
+                hMm = hVal * 25.4;
+            }
+
+            const nameStr = `Kustom (${wVal} x ${hVal} ${unit})`;
+
+            if (mode === 'selected') {
+                if (!selectedElementId) {
+                    showFloatingNotification("Pilih foto/kartu terlebih dahulu pada kanvas!");
+                    return;
+                }
+                applyPresetToSelectedOrNew(wMm, hMm, nameStr);
+            } else if (mode === 'new') {
+                addCustomSizeFrame(wMm, hMm, nameStr);
+            }
+        }
+
+        function addCustomSizeFrame(wMm, hMm, nameStr) {
+            const id = 'el-' + (++elementCounter);
+            const item = {
+                id: id,
+                type: 'shape',
+                shapeType: 'rectangle',
+                name: nameStr,
+                color: '#ffffff',
+                strokeColor: '#007acc',
+                strokeWidth: 2,
+                wMm: wMm,
+                hMm: hMm,
+                xMm: marginLeftMm + 10,
+                yMm: marginTopMm + 10,
+                angle: 0,
+                opacity: 100,
+                aspectRatio: wMm / hMm,
+                zIndex: elementsList.length + 1
+            };
+
+            elementsList.push(item);
+            renderElementOnCanvas(item);
+            selectElement(id);
+            syncActivePage();
+            showFloatingNotification(`Bingkai ${nameStr} berhasil dibuat!`);
         }
 
         function tidyUpAllIntoGrid() {
