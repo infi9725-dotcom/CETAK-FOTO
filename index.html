@@ -49,18 +49,18 @@
             background: #007acc;
         }
 
-        /* Grid Background Kanvas */
+        /* Grid Background Kanvas - Kotak Lebih Besar (Gaya Buku Matematika) */
         .canvas-grid {
-            background-size: 37.795px 37.795px; /* 10mm pada 96 DPI */
+            background-size: 75.59px 75.59px; /* Kotak Utama 20mm (2cm) pada 96 DPI */
             background-image: 
-                linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+                linear-gradient(to right, rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px);
         }
         .canvas-grid-sub {
-            background-size: 3.7795px 3.7795px; /* 1mm */
+            background-size: 18.8976px 18.8976px; /* Sub Kotak 5mm pada 96 DPI */
             background-image: 
-                linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+                linear-gradient(to right, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
         }
 
         /* Handle Transformasi Element Presisi */
@@ -624,6 +624,19 @@
                                 <span id="spacing-val-text" class="font-semibold text-white">5 mm</span>
                             </div>
                             <input type="range" id="layout-spacing-input" min="1" max="25" value="5" oninput="document.getElementById('spacing-val-text').textContent = this.value + ' mm'" class="w-full accent-editor-active h-1">
+                        </div>
+
+                        <!-- Opsi Posisi Grid -->
+                        <div>
+                            <label class="block text-[8px] text-gray-300 font-bold mb-1">Posisi Horisontal Grid:</label>
+                            <div class="grid grid-cols-2 gap-1">
+                                <button id="grid-align-left-btn" onclick="setGridAlign('left')" class="py-1 bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-[9px] font-bold rounded border border-zinc-700 transition flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-align-left text-xs"></i> Rata Kiri
+                                </button>
+                                <button id="grid-align-center-btn" onclick="setGridAlign('center')" class="py-1 bg-editor-active text-white text-[9px] font-bold rounded transition flex items-center justify-center gap-1 shadow">
+                                    <i class="fa-solid fa-align-center text-xs"></i> Rata Tengah
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-1">
@@ -1193,6 +1206,174 @@
 
         let isFullscreenLocked = false;
         let currentUiScale = 100;
+        let currentGridAlign = 'center'; // State alignment grid: 'left' atau 'center'
+
+        function setGridAlign(mode) {
+            currentGridAlign = mode;
+            const leftBtn = document.getElementById('grid-align-left-btn');
+            const centerBtn = document.getElementById('grid-align-center-btn');
+            
+            if (leftBtn && centerBtn) {
+                if (mode === 'left') {
+                    leftBtn.className = "py-1 bg-editor-active text-white text-[9px] font-bold rounded transition flex items-center justify-center gap-1 shadow";
+                    centerBtn.className = "py-1 bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-[9px] font-bold rounded border border-zinc-700 transition flex items-center justify-center gap-1";
+                } else {
+                    centerBtn.className = "py-1 bg-editor-active text-white text-[9px] font-bold rounded transition flex items-center justify-center gap-1 shadow";
+                    leftBtn.className = "py-1 bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-[9px] font-bold rounded border border-zinc-700 transition flex items-center justify-center gap-1";
+                }
+            }
+            tidyUpAllIntoGrid();
+        }
+
+        function tidyUpAllIntoGrid() {
+            if (elementsList.length === 0) return;
+            
+            let paperWMm = customWidthMm;
+            let paperHMm = customHeightMm;
+            if (currentPaperPreset !== 'CUSTOM' && CANVAS_PRESETS[currentPaperPreset]) {
+                paperWMm = CANVAS_PRESETS[currentPaperPreset].widthMm;
+                paperHMm = CANVAS_PRESETS[currentPaperPreset].heightMm;
+            }
+            if (currentOrientation === 'landscape') {
+                const temp = paperWMm;
+                paperWMm = paperHMm;
+                paperHMm = temp;
+            }
+
+            const spacing = parseFloat(document.getElementById('layout-spacing-input')?.value) || 5;
+            const startY = marginTopMm;
+            const availW = paperWMm - marginLeftMm - marginRightMm;
+
+            let rows = [];
+            let currentRow = [];
+            let currentRowWidth = 0;
+            let currentRowMaxH = 0;
+
+            elementsList.forEach((elem) => {
+                const itemW = elem.w;
+                const itemH = elem.h;
+
+                if (currentRow.length > 0 && (currentRowWidth + spacing + itemW > availW)) {
+                    rows.push({
+                        elements: currentRow,
+                        width: currentRowWidth,
+                        height: currentRowMaxH
+                    });
+                    currentRow = [elem];
+                    currentRowWidth = itemW;
+                    currentRowMaxH = itemH;
+                } else {
+                    currentRow.push(elem);
+                    currentRowWidth += (currentRow.length === 1 ? 0 : spacing) + itemW;
+                    if (itemH > currentRowMaxH) currentRowMaxH = itemH;
+                }
+            });
+
+            if (currentRow.length > 0) {
+                rows.push({
+                    elements: currentRow,
+                    width: currentRowWidth,
+                    height: currentRowMaxH
+                });
+            }
+
+            let curY = startY;
+
+            rows.forEach((row) => {
+                let curX = marginLeftMm;
+                
+                if (currentGridAlign === 'center') {
+                    const rowOffsetX = (availW - row.width) / 2;
+                    curX = marginLeftMm + Math.max(0, rowOffsetX);
+                }
+
+                row.elements.forEach((elem) => {
+                    elem.x = curX;
+                    elem.y = curY;
+                    curX += elem.w + spacing;
+                });
+
+                curY += row.height + spacing;
+            });
+
+            renderCanvas();
+            showFloatingNotification(`Objek dirapikan ke Grid (${currentGridAlign === 'center' ? 'Rata Tengah' : 'Rata Kiri'})!`);
+        }
+
+        function snapAllToGridLines() {
+            if (elementsList.length === 0) return;
+            const gridSize = 5;
+            elementsList.forEach(elem => {
+                elem.x = Math.round(elem.x / gridSize) * gridSize;
+                elem.y = Math.round(elem.y / gridSize) * gridSize;
+            });
+            renderCanvas();
+            showFloatingNotification("Objek disematkan ke Grid 5mm!");
+        }
+
+        function autoFillSelected() {
+            let sourceElem = selectedElementId ? elementsList.find(e => e.id === selectedElementId) : elementsList.find(e => e.type === 'image' || e.type === 'shape');
+            if (!sourceElem) {
+                showFloatingNotification("Pilih foto atau bentuk terlebih dahulu!");
+                return;
+            }
+
+            let paperWMm = customWidthMm;
+            let paperHMm = customHeightMm;
+            if (currentPaperPreset !== 'CUSTOM' && CANVAS_PRESETS[currentPaperPreset]) {
+                paperWMm = CANVAS_PRESETS[currentPaperPreset].widthMm;
+                paperHMm = CANVAS_PRESETS[currentPaperPreset].heightMm;
+            }
+            if (currentOrientation === 'landscape') {
+                const temp = paperWMm;
+                paperWMm = paperHMm;
+                paperHMm = temp;
+            }
+
+            const spacing = parseFloat(document.getElementById('layout-spacing-input')?.value) || 5;
+            const startY = marginTopMm;
+            const availW = paperWMm - marginLeftMm - marginRightMm;
+            const availH = paperHMm - marginTopMm - marginBottomMm;
+
+            const elemW = sourceElem.w;
+            const elemH = sourceElem.h;
+
+            const cols = Math.floor((availW + spacing) / (elemW + spacing));
+            const rows = Math.floor((availH + spacing) / (elemH + spacing));
+
+            if (cols < 1 || rows < 1) {
+                showFloatingNotification("Ukuran foto terlalu besar untuk muat dalam margin.");
+                return;
+            }
+
+            const totalRowWidth = (cols * elemW) + ((cols - 1) * spacing);
+            let startX = marginLeftMm;
+
+            if (currentGridAlign === 'center') {
+                startX = marginLeftMm + ((availW - totalRowWidth) / 2);
+            }
+
+            elementsList = [];
+            let count = 0;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    count++;
+                    const newElem = JSON.parse(JSON.stringify(sourceElem));
+                    elementCounter++;
+                    newElem.id = 'elem-' + Date.now() + '-' + elementCounter;
+                    newElem.x = startX + c * (elemW + spacing);
+                    newElem.y = startY + r * (elemH + spacing);
+                    elementsList.push(newElem);
+                }
+            }
+
+            pagesList[activePageIndex].elements = elementsList;
+            renderCanvas();
+            renderPageTabs();
+            selectElement(null);
+            showFloatingNotification(`Auto Fill Selesai! (${count} foto - ${currentGridAlign === 'center' ? 'Tengah' : 'Kiri'})`);
+        }
 
         function renderCanvas() {
             const itemsContainer = document.getElementById('canvas-items-container');
@@ -2793,117 +2974,6 @@
             showFloatingNotification("Coretan dibersihkan.");
         }
 
-        function tidyUpAllIntoGrid() {
-            if (elementsList.length === 0) return;
-            
-            let paperWMm = customWidthMm;
-            let paperHMm = customHeightMm;
-            if (currentPaperPreset !== 'CUSTOM' && CANVAS_PRESETS[currentPaperPreset]) {
-                paperWMm = CANVAS_PRESETS[currentPaperPreset].widthMm;
-                paperHMm = CANVAS_PRESETS[currentPaperPreset].heightMm;
-            }
-            if (currentOrientation === 'landscape') {
-                const temp = paperWMm;
-                paperWMm = paperHMm;
-                paperHMm = temp;
-            }
-
-            const spacing = parseFloat(document.getElementById('layout-spacing-input')?.value) || 5;
-            const startX = marginLeftMm;
-            const startY = marginTopMm;
-            const maxW = paperWMm - marginRightMm;
-
-            let curX = startX;
-            let curY = startY;
-            let rowMaxH = 0;
-
-            elementsList.forEach((elem) => {
-                if (curX + elem.w > maxW && curX > startX) {
-                    curX = startX;
-                    curY += rowMaxH + spacing;
-                    rowMaxH = 0;
-                }
-                
-                elem.x = curX;
-                elem.y = curY;
-                
-                if (elem.h > rowMaxH) rowMaxH = elem.h;
-                curX += elem.w + spacing;
-            });
-
-            renderCanvas();
-            showFloatingNotification("Objek dirapikan ke Grid!");
-        }
-
-        function snapAllToGridLines() {
-            if (elementsList.length === 0) return;
-            const gridSize = 5;
-            elementsList.forEach(elem => {
-                elem.x = Math.round(elem.x / gridSize) * gridSize;
-                elem.y = Math.round(elem.y / gridSize) * gridSize;
-            });
-            renderCanvas();
-            showFloatingNotification("Objek disematkan ke Grid 5mm!");
-        }
-
-        function autoFillSelected() {
-            let sourceElem = selectedElementId ? elementsList.find(e => e.id === selectedElementId) : elementsList.find(e => e.type === 'image' || e.type === 'shape');
-            if (!sourceElem) {
-                showFloatingNotification("Pilih foto atau bentuk terlebih dahulu!");
-                return;
-            }
-
-            let paperWMm = customWidthMm;
-            let paperHMm = customHeightMm;
-            if (currentPaperPreset !== 'CUSTOM' && CANVAS_PRESETS[currentPaperPreset]) {
-                paperWMm = CANVAS_PRESETS[currentPaperPreset].widthMm;
-                paperHMm = CANVAS_PRESETS[currentPaperPreset].heightMm;
-            }
-            if (currentOrientation === 'landscape') {
-                const temp = paperWMm;
-                paperWMm = paperHMm;
-                paperHMm = temp;
-            }
-
-            const spacing = parseFloat(document.getElementById('layout-spacing-input')?.value) || 5;
-            const startX = marginLeftMm;
-            const startY = marginTopMm;
-            const availW = paperWMm - marginLeftMm - marginRightMm;
-            const availH = paperHMm - marginTopMm - marginBottomMm;
-
-            const elemW = sourceElem.w;
-            const elemH = sourceElem.h;
-
-            const cols = Math.floor((availW + spacing) / (elemW + spacing));
-            const rows = Math.floor((availH + spacing) / (elemH + spacing));
-
-            if (cols < 1 || rows < 1) {
-                showFloatingNotification("Ukuran foto terlalu besar untuk muat dalam margin.");
-                return;
-            }
-
-            elementsList = [];
-            let count = 0;
-
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    count++;
-                    const newElem = JSON.parse(JSON.stringify(sourceElem));
-                    elementCounter++;
-                    newElem.id = 'elem-' + Date.now() + '-' + elementCounter;
-                    newElem.x = startX + c * (elemW + spacing);
-                    newElem.y = startY + r * (elemH + spacing);
-                    elementsList.push(newElem);
-                }
-            }
-
-            pagesList[activePageIndex].elements = elementsList;
-            renderCanvas();
-            renderPageTabs();
-            selectElement(null);
-            showFloatingNotification(`Auto Fill Selesai! (${count} foto)`);
-        }
-
         function switchTab(tab) {
             ['presets', 'shapes', 'properties'].forEach(t => {
                 const content = document.getElementById('tab-content-' + t);
@@ -3070,6 +3140,25 @@
                     duplicateSelected();
                 } else if (e.key === 'v' || e.key === 'V') {
                     selectTool('move');
+                } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                    if (selectedElementId || selectedElementIds.length > 0) {
+                        e.preventDefault();
+                        
+                        const step = e.shiftKey ? 5 : 1;
+                        const targetIds = selectedElementIds.length > 0 ? selectedElementIds : [selectedElementId];
+                        
+                        elementsList.forEach(elem => {
+                            if (targetIds.includes(elem.id)) {
+                                if (e.key === 'ArrowLeft') elem.x -= step;
+                                if (e.key === 'ArrowRight') elem.x += step;
+                                if (e.key === 'ArrowUp') elem.y -= step;
+                                if (e.key === 'ArrowDown') elem.y += step;
+                            }
+                        });
+
+                        renderCanvas();
+                        updateSelectionUI();
+                    }
                 }
             });
 
