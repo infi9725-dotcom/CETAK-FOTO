@@ -690,7 +690,7 @@
 
                 </div>
 
-                <!-- TAB 2: SHAPES
+                <!-- TAB 2: SHAPES & TRACE -->
                 <div id="tab-content-shapes" class="p-3 space-y-4 hidden pb-10 text-[10px]">
                     <!-- AUTO CONTOUR / TRACE LOGO -->
                     <div class="bg-amber-950/40 border border-amber-700/60 p-2.5 rounded-lg space-y-2 shadow">
@@ -970,21 +970,40 @@
                                 <i class="fa-solid fa-bullseye text-[9px]"></i> Buat Garis Contour / Trace
                             </button>
 
-                            <label class="block text-[9px] font-bold text-gray-400 uppercase pt-1">Garis Tepi Foto (Border):</label>
-                            <div class="flex items-center space-x-1">
-                                <button onclick="applyPhotoBorder('#000000', 1)" class="flex-1 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-[9px] border border-zinc-600 transition">
-                                    Hitam 1px
-                                </button>
-                                <button onclick="applyPhotoBorder('#000000', 2)" class="flex-1 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-[9px] border border-zinc-600 transition">
-                                    Hitam 2px
-                                </button>
-                                <button onclick="applyPhotoBorder('#000000', 0)" class="flex-1 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-rose-300 rounded text-[9px] border border-zinc-600 transition">
-                                    Tanpa Garis
-                                </button>
+                            <!-- KONTROL GARIS TEPI FOTO (BORDER TOGGLE) -->
+                            <div class="border-t border-zinc-800 pt-2 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[9px] font-bold text-gray-300 uppercase flex items-center gap-1">
+                                        <i class="fa-solid fa-square-minus text-amber-400"></i> Garis Tepi Foto (Border)
+                                    </label>
+                                    <!-- Toggle Switch ON/OFF -->
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="photo-border-toggle" onchange="togglePhotoBorder(this.checked)" class="sr-only peer">
+                                        <div class="w-7 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="applyPhotoBorder('#000000', 1)" class="flex-1 py-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-[9px] border border-zinc-600 transition font-medium">
+                                        Hitam 1px
+                                    </button>
+                                    <button onclick="applyPhotoBorder('#000000', 2)" class="flex-1 py-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-[9px] border border-zinc-600 transition font-medium">
+                                        Hitam 2px
+                                    </button>
+                                    <button onclick="applyPhotoBorder('#000000', 0)" class="flex-1 py-1 bg-zinc-800 hover:bg-zinc-700 text-rose-300 rounded text-[9px] border border-zinc-600 transition font-medium">
+                                        OFF
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-1 pt-0.5">
+                                    <button onclick="setPhotoBorderAll('#000000', 1)" class="py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 border border-emerald-700/60 rounded text-[9px] font-bold transition flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-check-double text-[8px]"></i> ON kan Semua
+                                    </button>
+                                    <button onclick="setPhotoBorderAll('#000000', 0)" class="py-1 bg-rose-900/60 hover:bg-rose-800 text-rose-300 border border-rose-700/60 rounded text-[9px] font-bold transition flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-ban text-[8px]"></i> OFF kan Semua
+                                    </button>
+                                </div>
                             </div>
-                            <button onclick="setPhotoBorderAll('#000000', 1)" class="w-full py-1 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 rounded text-[10px] font-bold transition flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-border-top-left text-[9px]"></i> Garis Hitam Ke Semua Foto
-                            </button>
                         </div>
 
                         <!-- Kontrol Khusus Teks -->
@@ -2148,6 +2167,12 @@
                 if (imgControls) imgControls.classList.remove('hidden');
                 if (textControls) textControls.classList.add('hidden');
                 if (shapeControls) shapeControls.classList.add('hidden');
+
+                // Sync toggle border dengan status elemen terpilih
+                const borderToggle = document.getElementById('photo-border-toggle');
+                if (borderToggle) {
+                    borderToggle.checked = (elem.borderWidth !== undefined && elem.borderWidth > 0);
+                }
             } else if (elem.type === 'text') {
                 if (imgControls) imgControls.classList.add('hidden');
                 if (textControls) textControls.classList.remove('hidden');
@@ -2165,6 +2190,46 @@
                 document.getElementById('prop-shape-strokewidth').value = elem.strokeWidth !== undefined ? elem.strokeWidth : 2;
                 document.getElementById('prop-shape-dashstyle').value = elem.dashStyle || 'solid';
             }
+        }
+
+        function togglePhotoBorder(isON) {
+            if (!selectedElementId) return;
+            const elem = elementsList.find(e => e.id === selectedElementId);
+            if (elem && elem.type === 'image') {
+                elem.borderWidth = isON ? 1 : 0;
+                elem.borderColor = '#000000';
+                renderCanvas();
+                showFloatingNotification(isON ? "Garis tepi foto di-ON kan!" : "Garis tepi foto di-OFF kan!");
+            }
+        }
+
+        function applyPhotoBorder(color, width) {
+            if (!selectedElementId) return;
+            const elem = elementsList.find(e => e.id === selectedElementId);
+            if (elem && elem.type === 'image') {
+                elem.borderColor = color;
+                elem.borderWidth = width;
+                
+                const borderToggle = document.getElementById('photo-border-toggle');
+                if (borderToggle) borderToggle.checked = width > 0;
+                
+                renderCanvas();
+                showFloatingNotification(width > 0 ? `Garis tepi hitam ${width}px diaktifkan.` : "Garis tepi dinonaktifkan.");
+            }
+        }
+
+        function setPhotoBorderAll(color, width) {
+            elementsList.forEach(elem => {
+                if (elem.type === 'image') {
+                    elem.borderColor = color;
+                    elem.borderWidth = width;
+                }
+            });
+            const borderToggle = document.getElementById('photo-border-toggle');
+            if (borderToggle) borderToggle.checked = width > 0;
+            
+            renderCanvas();
+            showFloatingNotification(width > 0 ? "Garis tepi di-ON kan ke semua foto!" : "Garis tepi di-OFF kan ke semua foto!");
         }
 
         function updateShapeColors() {
@@ -2444,25 +2509,114 @@
             e.target.value = '';
         }
 
-        function applyPhotoBorder(color, width) {
+        function applyPresetToSelectedOrNew(wMm, hMm, label) {
+            if (selectedElementId) {
+                const elem = elementsList.find(e => e.id === selectedElementId);
+                if (elem) {
+                    elem.w = wMm;
+                    elem.h = hMm;
+                    renderCanvas();
+                    updateSelectionUI();
+                    showFloatingNotification(`Ukuran ${label} diterapkan.`);
+                    return;
+                }
+            }
+            addElement({
+                type: 'shape',
+                shapeType: 'rectangle',
+                name: label,
+                x: 20,
+                y: 20,
+                w: wMm,
+                h: hMm,
+                fillColor: '#ffffff',
+                strokeColor: '#000000',
+                strokeWidth: 1
+            });
+            showFloatingNotification(`Bingkai ${label} dibuat.`);
+        }
+
+        function applyCustomElementPreset(mode) {
+            const wVal = parseFloat(document.getElementById('preset-custom-w').value) || 53.98;
+            const hVal = parseFloat(document.getElementById('preset-custom-h').value) || 85.6;
+            const unit = document.getElementById('preset-custom-unit').value;
+
+            let mult = 1;
+            if (unit === 'cm') mult = 10;
+            else if (unit === 'inch') mult = 25.4;
+
+            const wMm = wVal * mult;
+            const hMm = hVal * mult;
+
+            if (mode === 'selected' && selectedElementId) {
+                applyPresetToSelectedOrNew(wMm, hMm, 'Kustom');
+            } else {
+                addElement({
+                    type: 'shape',
+                    shapeType: 'rectangle',
+                    name: 'Bingkai ' + wVal + unit + 'x' + hVal + unit,
+                    x: 20,
+                    y: 20,
+                    w: wMm,
+                    h: hMm,
+                    fillColor: '#ffffff',
+                    strokeColor: '#000000',
+                    strokeWidth: 1
+                });
+            }
+        }
+
+        function createNewTextElement() {
+            addElement({
+                type: 'text',
+                name: 'Label Teks',
+                text: 'Teks Baru',
+                x: 30,
+                y: 30,
+                w: 60,
+                h: 20,
+                fontFamily: 'Inter',
+                fontSize: 24,
+                color: '#000000',
+                isBold: true
+            });
+            showFloatingNotification("Teks baru ditambahkan!");
+        }
+
+        function updateTextContent() {
             if (!selectedElementId) return;
             const elem = elementsList.find(e => e.id === selectedElementId);
-            if (elem && elem.type === 'image') {
-                elem.borderColor = color;
-                elem.borderWidth = width;
+            if (elem && elem.type === 'text') {
+                elem.text = document.getElementById('prop-text-string').value;
                 renderCanvas();
             }
         }
 
-        function setPhotoBorderAll(color, width) {
-            elementsList.forEach(elem => {
-                if (elem.type === 'image') {
-                    elem.borderColor = color;
-                    elem.borderWidth = width;
-                }
-            });
-            renderCanvas();
-            showFloatingNotification("Garis hitam diterapkan ke semua foto!");
+        function updateTextFont() {
+            if (!selectedElementId) return;
+            const elem = elementsList.find(e => e.id === selectedElementId);
+            if (elem && elem.type === 'text') {
+                elem.fontFamily = document.getElementById('prop-text-font').value;
+                renderCanvas();
+            }
+        }
+
+        function updateTextColor() {
+            if (!selectedElementId) return;
+            const elem = elementsList.find(e => e.id === selectedElementId);
+            if (elem && elem.type === 'text') {
+                elem.color = document.getElementById('prop-text-color').value;
+                renderCanvas();
+            }
+        }
+
+        function updateTextSize() {
+            if (!selectedElementId) return;
+            const elem = elementsList.find(e => e.id === selectedElementId);
+            if (elem && elem.type === 'text') {
+                elem.fontSize = parseInt(document.getElementById('prop-text-size').value) || 18;
+                renderCanvas();
+            }
         }
 
         function exportCanvasOffline(format) {
@@ -2682,82 +2836,43 @@
             }, 250);
         }
 
-        function applyPresetToSelectedOrNew(wMm, hMm, label) {
-            if (selectedElementId) {
-                const elem = elementsList.find(e => e.id === selectedElementId);
-                if (elem) {
-                    elem.w = wMm;
-                    elem.h = hMm;
-                    renderCanvas();
-                    updateSelectionUI();
-                    return;
-                }
-            }
-            addElement({
-                type: 'shape',
-                shapeType: 'rectangle',
-                name: label,
-                x: 20,
-                y: 20,
-                w: wMm,
-                h: hMm,
-                fillColor: '#ffffff',
-                strokeColor: '#000000',
-                strokeWidth: 1
-            });
-        }
-
-        function applyCustomElementPreset(mode) {
-            const wVal = parseFloat(document.getElementById('preset-custom-w').value) || 53.98;
-            const hVal = parseFloat(document.getElementById('preset-custom-h').value) || 85.6;
-            const unit = document.getElementById('preset-custom-unit').value;
-
-            let mult = 1;
-            if (unit === 'cm') mult = 10;
-            else if (unit === 'inch') mult = 25.4;
-
-            const wMm = wVal * mult;
-            const hMm = hVal * mult;
-
-            if (mode === 'selected' && selectedElementId) {
-                applyPresetToSelectedOrNew(wMm, hMm, 'Kustom');
-            } else {
-                addElement({
-                    type: 'shape',
-                    shapeType: 'rectangle',
-                    name: 'Bingkai ' + wVal + unit + 'x' + hVal + unit,
-                    x: 20,
-                    y: 20,
-                    w: wMm,
-                    h: hMm,
-                    fillColor: '#ffffff',
-                    strokeColor: '#000000',
-                    strokeWidth: 1
-                });
-            }
-        }
-
-        function createNewTextElement() {
-            addElement({
-                type: 'text',
-                name: 'Label Teks',
-                text: 'Teks Baru',
-                x: 30,
-                y: 30,
-                w: 60,
-                h: 20,
-                fontFamily: 'Inter',
-                fontSize: 24,
-                color: '#000000',
-                isBold: true
-            });
-        }
-
-        function updateTextContent() {
+        function applyPhotoBorder(color, width) {
             if (!selectedElementId) return;
             const elem = elementsList.find(e => e.id === selectedElementId);
-            if (elem && elem.type === 'text') {
-                elem.text = document.getElementById('prop-text-string').value;
+            if (elem && elem.type === 'image') {
+                elem.borderColor = color;
+                elem.borderWidth = width;
+                
+                const borderToggle = document.getElementById('photo-border-toggle');
+                if (borderToggle) borderToggle.checked = width > 0;
+                
+                renderCanvas();
+                showFloatingNotification(width > 0 ? `Garis tepi hitam ${width}px diaktifkan.` : "Garis tepi dinonaktifkan.");
+            }
+        }
+
+        function setPhotoBorderAll(color, width) {
+            elementsList.forEach(elem => {
+                if (elem.type === 'image') {
+                    elem.borderColor = color;
+                    elem.borderWidth = width;
+                }
+            });
+            const borderToggle = document.getElementById('photo-border-toggle');
+            if (borderToggle) borderToggle.checked = width > 0;
+            
+            renderCanvas();
+            showFloatingNotification(width > 0 ? "Garis tepi di-ON kan ke semua foto!" : "Garis tepi di-OFF kan ke semua foto!");
+        }
+
+        function updateShapeColors() {
+            if (!selectedElementId) return;
+            const elem = elementsList.find(e => e.id === selectedElementId);
+            if (elem && elem.type === 'shape') {
+                elem.fillColor = document.getElementById('prop-shape-fill').value;
+                elem.strokeColor = document.getElementById('prop-shape-stroke').value;
+                elem.strokeWidth = parseInt(document.getElementById('prop-shape-strokewidth').value) || 0;
+                elem.dashStyle = document.getElementById('prop-shape-dashstyle').value;
                 renderCanvas();
             }
         }
